@@ -15,210 +15,147 @@
 
   <!-- Nav -->
   <div class="max-w-md mx-auto mb-8">
-    <h1 class="text-2xl font-black text-gray-800 mb-1">Kiekkokisa Design Demo</h1>
-    <p class="text-gray-500 text-sm">Kolme tyylivaihtoehtoa — valitse suosikkisi</p>
-    <div class="flex gap-2 mt-4 flex-wrap">
-      <a href="#v1" class="px-4 py-1.5 rounded-full bg-white border border-gray-200 text-sm font-bold text-gray-600 shadow-sm">A: Nykyinen</a>
-      <a href="#v2" class="px-4 py-1.5 rounded-full bg-white border border-gray-200 text-sm font-bold text-gray-600 shadow-sm">B: Duolingo-värit</a>
-      <a href="#v3" class="px-4 py-1.5 rounded-full bg-white border border-gray-200 text-sm font-bold text-gray-600 shadow-sm">C: Gradient-aksentit</a>
+    <h1 class="text-2xl font-black text-gray-800 mb-1">Typografia — Otsikkotyylit</h1>
+    <p class="text-gray-500 text-sm">Section-otsikkojen kaksi vaihtoehtoa gradient-korttimaailmassa</p>
+    <div class="flex gap-2 mt-4">
+      <a href="#a" class="px-4 py-1.5 rounded-full bg-white border border-gray-200 text-sm font-bold text-gray-600 shadow-sm">A: Uppercase pieni</a>
+      <a href="#b" class="px-4 py-1.5 rounded-full bg-white border border-gray-200 text-sm font-bold text-gray-600 shadow-sm">B: Normaali iso</a>
     </div>
   </div>
 
-  <!-- ============ VERSION A: Nykyinen ============ -->
-  <div id="v1" class="max-w-md mx-auto mb-16">
-    <div class="inline-block px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-xs font-black uppercase tracking-widest mb-4">A — Nykyinen</div>
+  <!-- Shared card snippet macro -->
+  <!-- ============ OPTION A: Uppercase small ============ -->
+  <div id="a" class="max-w-md mx-auto mb-16">
+    <div class="inline-block px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-xs font-black uppercase tracking-widest mb-4">A — Uppercase pieni</div>
     <div class="bg-[#f3f6ff] rounded-3xl p-5 space-y-4">
 
+      <!-- Section label style A -->
+      <div class="text-sm font-black text-gray-600 uppercase tracking-wide px-1">Tilastot</div>
+
       <div class="grid grid-cols-2 gap-3">
-        <div class="glass bg-white/70 border border-white/90 rounded-3xl p-4 shadow-[0_4px_24px_rgba(100,120,200,0.10)]">
+        <div class="glass rounded-3xl p-4 shadow-md" style="background:linear-gradient(135deg,rgba(59,130,246,0.12),rgba(255,255,255,0.85));border:1.5px solid rgba(59,130,246,0.22)">
           <div class="text-2xl mb-2">🥏</div>
           <div class="text-3xl font-black text-gray-900">32</div>
-          <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1">Kierroksia</div>
-        </div>
-        <div class="glass bg-white/70 border border-white/90 rounded-3xl p-4 shadow-[0_4px_24px_rgba(100,120,200,0.10)]">
-          <div class="text-2xl mb-2">🕳️</div>
-          <div class="text-3xl font-black text-gray-900">375</div>
-          <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1">Väyliä</div>
-        </div>
-        <div class="glass bg-green-50/80 border border-green-100/80 rounded-3xl p-4 shadow-[0_4px_24px_rgba(100,120,200,0.10)]">
-          <div class="text-2xl mb-2">🐦</div>
-          <div class="text-3xl font-black text-gray-900">104</div>
-          <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1">Birdiet</div>
-        </div>
-        <div class="glass bg-white/70 border border-white/90 rounded-3xl p-4 shadow-[0_4px_24px_rgba(100,120,200,0.10)]">
-          <div class="text-2xl mb-2">📊</div>
-          <div class="text-3xl font-black text-gray-900">27.7%</div>
-          <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1">Birdie-%</div>
-        </div>
-      </div>
-
-      <div class="glass bg-white/70 border border-white/90 rounded-3xl px-5 py-4 shadow-[0_4px_24px_rgba(100,120,200,0.10)] flex items-center gap-4">
-        <span class="text-3xl">⭐</span>
-        <div>
-          <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Suosikkikenttä</div>
-          <div class="text-lg font-black text-gray-900">Herttoniemen frisbeegolf</div>
-        </div>
-        <div class="ml-auto text-right">
-          <div class="text-2xl font-black text-green-600">18×</div>
-          <div class="text-xs text-gray-400">kierrosta</div>
-        </div>
-      </div>
-
-      <div class="space-y-2">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Radat</div>
-        <div class="glass bg-green-50/80 border border-green-100/80 rounded-3xl px-4 py-3 shadow-[0_4px_24px_rgba(100,120,200,0.10)]">
-          <div class="flex items-start justify-between gap-3">
-            <div class="font-black text-gray-900">⭐ Herttoniemen frisbeegolf</div>
-            <div class="shrink-0 text-sm font-bold text-gray-400">18×</div>
-          </div>
-          <div class="flex gap-4 mt-2">
-            <div><div class="text-lg font-black text-green-600">-5</div><div class="text-xs text-gray-400">Paras</div></div>
-            <div><div class="text-lg font-black text-green-600">-0.2</div><div class="text-xs text-gray-400">Ka.</div></div>
-          </div>
-        </div>
-        <div class="glass bg-white/70 border border-white/90 rounded-3xl px-4 py-3 shadow-[0_4px_24px_rgba(100,120,200,0.10)]">
-          <div class="flex items-start justify-between gap-3">
-            <div class="font-black text-gray-900">Vierumäki Disc Golf</div>
-            <div class="shrink-0 text-sm font-bold text-gray-400">5×</div>
-          </div>
-          <div class="flex gap-4 mt-2">
-            <div><div class="text-lg font-black text-green-600">-6</div><div class="text-xs text-gray-400">Paras</div></div>
-            <div><div class="text-lg font-black text-green-600">-3.4</div><div class="text-xs text-gray-400">Ka.</div></div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ============ VERSION B: Duolingo-värit ============ -->
-  <div id="v2" class="max-w-md mx-auto mb-16">
-    <div class="inline-block px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-black uppercase tracking-widest mb-4">B — Duolingo-värit</div>
-    <div class="bg-[#f3f6ff] rounded-3xl p-5 space-y-4">
-
-      <div class="grid grid-cols-2 gap-3">
-        <div class="rounded-3xl p-4 bg-blue-500 text-white shadow-lg shadow-blue-200">
-          <div class="text-2xl mb-2">🥏</div>
-          <div class="text-3xl font-black">32</div>
-          <div class="text-xs font-bold text-blue-100 uppercase tracking-wider mt-1">Kierroksia</div>
-        </div>
-        <div class="rounded-3xl p-4 bg-violet-500 text-white shadow-lg shadow-violet-200">
-          <div class="text-2xl mb-2">🕳️</div>
-          <div class="text-3xl font-black">375</div>
-          <div class="text-xs font-bold text-violet-100 uppercase tracking-wider mt-1">Väyliä</div>
-        </div>
-        <div class="rounded-3xl p-4 bg-green-500 text-white shadow-lg shadow-green-200">
-          <div class="text-2xl mb-2">🐦</div>
-          <div class="text-3xl font-black">104</div>
-          <div class="text-xs font-bold text-green-100 uppercase tracking-wider mt-1">Birdiet</div>
-        </div>
-        <div class="rounded-3xl p-4 bg-amber-400 text-white shadow-lg shadow-amber-200">
-          <div class="text-2xl mb-2">📊</div>
-          <div class="text-3xl font-black">27.7%</div>
-          <div class="text-xs font-bold text-amber-100 uppercase tracking-wider mt-1">Birdie-%</div>
-        </div>
-      </div>
-
-      <div class="rounded-3xl px-5 py-4 bg-white shadow-md flex items-center gap-4 border-l-4 border-amber-400">
-        <span class="text-3xl">⭐</span>
-        <div>
-          <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Suosikkikenttä</div>
-          <div class="text-lg font-black text-gray-900">Herttoniemen frisbeegolf</div>
-        </div>
-        <div class="ml-auto text-right">
-          <div class="text-2xl font-black text-amber-500">18×</div>
-          <div class="text-xs text-gray-400">kierrosta</div>
-        </div>
-      </div>
-
-      <div class="space-y-2">
-        <div class="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">Radat</div>
-        <div class="rounded-3xl px-4 py-3 bg-white shadow-md border-l-4 border-amber-400">
-          <div class="flex items-start justify-between gap-3">
-            <div class="font-black text-gray-900">⭐ Herttoniemen frisbeegolf</div>
-            <div class="shrink-0 text-sm font-bold text-gray-500">18×</div>
-          </div>
-          <div class="flex gap-4 mt-2">
-            <div><div class="text-lg font-black text-green-600">-5</div><div class="text-xs text-gray-500">Paras</div></div>
-            <div><div class="text-lg font-black text-green-600">-0.2</div><div class="text-xs text-gray-500">Ka.</div></div>
-          </div>
-        </div>
-        <div class="rounded-3xl px-4 py-3 bg-white shadow-md">
-          <div class="flex items-start justify-between gap-3">
-            <div class="font-black text-gray-900">Vierumäki Disc Golf</div>
-            <div class="shrink-0 text-sm font-bold text-gray-500">5×</div>
-          </div>
-          <div class="flex gap-4 mt-2">
-            <div><div class="text-lg font-black text-green-600">-6</div><div class="text-xs text-gray-500">Paras</div></div>
-            <div><div class="text-lg font-black text-green-600">-3.4</div><div class="text-xs text-gray-500">Ka.</div></div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ============ VERSION C: Gradient-aksentit ============ -->
-  <div id="v3" class="max-w-md mx-auto mb-16">
-    <div class="inline-block px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-black uppercase tracking-widest mb-4">C — Gradient-aksentit</div>
-    <div class="bg-[#f3f6ff] rounded-3xl p-5 space-y-4">
-
-      <div class="grid grid-cols-2 gap-3">
-        <div class="glass rounded-3xl p-4 shadow-md" style="background:linear-gradient(135deg,rgba(59,130,246,0.12),rgba(255,255,255,0.85));border:1.5px solid rgba(59,130,246,0.20)">
-          <div class="text-2xl mb-2">🥏</div>
-          <div class="text-3xl font-black text-gray-900">32</div>
-          <div class="text-xs font-bold text-blue-500 uppercase tracking-wider mt-1">Kierroksia</div>
-        </div>
-        <div class="glass rounded-3xl p-4 shadow-md" style="background:linear-gradient(135deg,rgba(139,92,246,0.12),rgba(255,255,255,0.85));border:1.5px solid rgba(139,92,246,0.20)">
-          <div class="text-2xl mb-2">🕳️</div>
-          <div class="text-3xl font-black text-gray-900">375</div>
-          <div class="text-xs font-bold text-violet-500 uppercase tracking-wider mt-1">Väyliä</div>
+          <div class="text-xs font-black text-blue-500 uppercase tracking-wide mt-1">Kierroksia</div>
         </div>
         <div class="glass rounded-3xl p-4 shadow-md" style="background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(255,255,255,0.85));border:1.5px solid rgba(34,197,94,0.25)">
           <div class="text-2xl mb-2">🐦</div>
           <div class="text-3xl font-black text-gray-900">104</div>
-          <div class="text-xs font-bold text-green-600 uppercase tracking-wider mt-1">Birdiet</div>
-        </div>
-        <div class="glass rounded-3xl p-4 shadow-md" style="background:linear-gradient(135deg,rgba(234,179,8,0.15),rgba(255,255,255,0.85));border:1.5px solid rgba(234,179,8,0.25)">
-          <div class="text-2xl mb-2">📊</div>
-          <div class="text-3xl font-black text-gray-900">27.7%</div>
-          <div class="text-xs font-bold text-amber-500 uppercase tracking-wider mt-1">Birdie-%</div>
+          <div class="text-xs font-black text-green-600 uppercase tracking-wide mt-1">Birdiet</div>
         </div>
       </div>
 
-      <div class="glass rounded-3xl px-5 py-4 shadow-md flex items-center gap-4" style="background:linear-gradient(135deg,rgba(234,179,8,0.12),rgba(255,255,255,0.85));border:1.5px solid rgba(234,179,8,0.25)">
+      <!-- Favourite -->
+      <div class="text-sm font-black text-gray-600 uppercase tracking-wide px-1">Suosikki</div>
+      <div class="glass rounded-3xl px-5 py-4 shadow-md flex items-center gap-4" style="background:linear-gradient(135deg,rgba(234,179,8,0.15),rgba(255,255,255,0.85));border:1.5px solid rgba(234,179,8,0.25)">
         <span class="text-3xl">⭐</span>
         <div>
-          <div class="text-xs font-bold text-amber-500 uppercase tracking-wider mb-0.5">Suosikkikenttä</div>
+          <div class="text-xs font-black text-amber-600 uppercase tracking-wide mb-0.5">Suosikkikenttä</div>
           <div class="text-lg font-black text-gray-900">Herttoniemen frisbeegolf</div>
         </div>
         <div class="ml-auto text-right">
-          <div class="text-2xl font-black text-amber-500">18×</div>
+          <div class="text-2xl font-black text-amber-600">18×</div>
+          <div class="text-xs text-gray-400">kierrosta</div>
+        </div>
+      </div>
+
+      <!-- Course list -->
+      <div class="text-sm font-black text-gray-600 uppercase tracking-wide px-1">Radat</div>
+      <div class="glass rounded-3xl px-4 py-3 shadow-md" style="background:linear-gradient(135deg,rgba(34,197,94,0.10),rgba(255,255,255,0.85));border:1.5px solid rgba(34,197,94,0.20)">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">⭐ Herttoniemen frisbeegolf</div>
+          <div class="shrink-0 text-sm font-bold text-gray-500">18×</div>
+        </div>
+        <div class="flex gap-4 mt-2">
+          <div><div class="text-lg font-black text-green-700">-5</div><div class="text-xs font-bold text-gray-500 uppercase tracking-wide">Paras</div></div>
+          <div><div class="text-lg font-black text-green-700">-0.2</div><div class="text-xs font-bold text-gray-500 uppercase tracking-wide">Ka.</div></div>
+        </div>
+      </div>
+      <div class="glass bg-white/80 rounded-3xl px-4 py-3 shadow-sm border border-white/90">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">Vierumäki Disc Golf</div>
+          <div class="shrink-0 text-sm font-bold text-gray-500">5×</div>
+        </div>
+        <div class="flex gap-4 mt-2">
+          <div><div class="text-lg font-black text-green-700">-6</div><div class="text-xs font-bold text-gray-500 uppercase tracking-wide">Paras</div></div>
+          <div><div class="text-lg font-black text-green-700">-3.4</div><div class="text-xs font-bold text-gray-500 uppercase tracking-wide">Ka.</div></div>
+        </div>
+      </div>
+
+      <!-- Friend section -->
+      <div class="glass bg-white/80 rounded-3xl overflow-hidden shadow-sm border border-white/90">
+        <div class="px-5 py-4 flex items-center justify-between border-b border-black/5">
+          <span class="text-sm font-black text-gray-600 uppercase tracking-wide">Kaverivertailu</span>
+          <span class="text-xs font-bold text-gray-400">Pois</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ OPTION B: Normal large ============ -->
+  <div id="b" class="max-w-md mx-auto mb-16">
+    <div class="inline-block px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-black uppercase tracking-widest mb-4">B — Normaali iso</div>
+    <div class="bg-[#f3f6ff] rounded-3xl p-5 space-y-4">
+
+      <!-- Section label style B -->
+      <div class="text-base font-black text-gray-800 px-1">Tilastot</div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="glass rounded-3xl p-4 shadow-md" style="background:linear-gradient(135deg,rgba(59,130,246,0.12),rgba(255,255,255,0.85));border:1.5px solid rgba(59,130,246,0.22)">
+          <div class="text-2xl mb-2">🥏</div>
+          <div class="text-3xl font-black text-gray-900">32</div>
+          <div class="text-xs font-black text-blue-500 uppercase tracking-wide mt-1">Kierroksia</div>
+        </div>
+        <div class="glass rounded-3xl p-4 shadow-md" style="background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(255,255,255,0.85));border:1.5px solid rgba(34,197,94,0.25)">
+          <div class="text-2xl mb-2">🐦</div>
+          <div class="text-3xl font-black text-gray-900">104</div>
+          <div class="text-xs font-black text-green-600 uppercase tracking-wide mt-1">Birdiet</div>
+        </div>
+      </div>
+
+      <!-- Favourite -->
+      <div class="text-base font-black text-gray-800 px-1">Suosikki</div>
+      <div class="glass rounded-3xl px-5 py-4 shadow-md flex items-center gap-4" style="background:linear-gradient(135deg,rgba(234,179,8,0.15),rgba(255,255,255,0.85));border:1.5px solid rgba(234,179,8,0.25)">
+        <span class="text-3xl">⭐</span>
+        <div>
+          <div class="text-xs font-black text-amber-600 uppercase tracking-wide mb-0.5">Suosikkikenttä</div>
+          <div class="text-lg font-black text-gray-900">Herttoniemen frisbeegolf</div>
+        </div>
+        <div class="ml-auto text-right">
+          <div class="text-2xl font-black text-amber-600">18×</div>
           <div class="text-xs text-gray-500">kierrosta</div>
         </div>
       </div>
 
-      <div class="space-y-2">
-        <div class="text-xs font-bold text-gray-600 uppercase tracking-wider px-1">Radat</div>
-        <div class="glass rounded-3xl px-4 py-3 shadow-md" style="background:linear-gradient(135deg,rgba(34,197,94,0.10),rgba(255,255,255,0.85));border:1.5px solid rgba(34,197,94,0.20)">
-          <div class="flex items-start justify-between gap-3">
-            <div class="font-black text-gray-900">⭐ Herttoniemen frisbeegolf</div>
-            <div class="shrink-0 text-sm font-bold text-gray-500">18×</div>
-          </div>
-          <div class="flex gap-4 mt-2">
-            <div><div class="text-lg font-black text-green-700">-5</div><div class="text-xs text-gray-500">Paras</div></div>
-            <div><div class="text-lg font-black text-green-700">-0.2</div><div class="text-xs text-gray-500">Ka.</div></div>
-          </div>
+      <!-- Course list -->
+      <div class="text-base font-black text-gray-800 px-1">Radat</div>
+      <div class="glass rounded-3xl px-4 py-3 shadow-md" style="background:linear-gradient(135deg,rgba(34,197,94,0.10),rgba(255,255,255,0.85));border:1.5px solid rgba(34,197,94,0.20)">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">⭐ Herttoniemen frisbeegolf</div>
+          <div class="shrink-0 text-sm font-bold text-gray-500">18×</div>
         </div>
-        <div class="glass bg-white/80 rounded-3xl px-4 py-3 shadow-sm border border-white/90">
-          <div class="flex items-start justify-between gap-3">
-            <div class="font-black text-gray-900">Vierumäki Disc Golf</div>
-            <div class="shrink-0 text-sm font-bold text-gray-500">5×</div>
-          </div>
-          <div class="flex gap-4 mt-2">
-            <div><div class="text-lg font-black text-green-700">-6</div><div class="text-xs text-gray-500">Paras</div></div>
-            <div><div class="text-lg font-black text-green-700">-3.4</div><div class="text-xs text-gray-500">Ka.</div></div>
-          </div>
+        <div class="flex gap-4 mt-2">
+          <div><div class="text-lg font-black text-green-700">-5</div><div class="text-xs text-gray-500">Paras</div></div>
+          <div><div class="text-lg font-black text-green-700">-0.2</div><div class="text-xs text-gray-500">Ka.</div></div>
+        </div>
+      </div>
+      <div class="glass bg-white/80 rounded-3xl px-4 py-3 shadow-sm border border-white/90">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">Vierumäki Disc Golf</div>
+          <div class="shrink-0 text-sm font-bold text-gray-500">5×</div>
+        </div>
+        <div class="flex gap-4 mt-2">
+          <div><div class="text-lg font-black text-green-700">-6</div><div class="text-xs text-gray-500">Paras</div></div>
+          <div><div class="text-lg font-black text-green-700">-3.4</div><div class="text-xs text-gray-500">Ka.</div></div>
+        </div>
+      </div>
+
+      <!-- Friend section -->
+      <div class="glass bg-white/80 rounded-3xl overflow-hidden shadow-sm border border-white/90">
+        <div class="px-5 py-4 flex items-center justify-between border-b border-black/5">
+          <span class="text-base font-black text-gray-800">Kaverivertailu</span>
+          <span class="text-xs font-bold text-gray-400">Pois</span>
         </div>
       </div>
 

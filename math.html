@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laskuharjoitus</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Nunito', sans-serif; }
+    .card-scene { perspective: 800px; }
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.5s cubic-bezier(0.34, 1.2, 0.64, 1);
+      transform-style: preserve-3d;
+    }
+    .card-inner.flipped { transform: rotateY(180deg); }
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 2rem;
+    }
+    .card-back { transform: rotateY(180deg); }
+
+    @keyframes pop-in {
+      0%   { transform: scale(0.92) rotateY(0deg); opacity: 0; }
+      100% { transform: scale(1)    rotateY(0deg); opacity: 1; }
+    }
+    .card-scene.new-card .card-inner { animation: pop-in 0.3s cubic-bezier(0.34,1.4,0.64,1) forwards; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#f3f6ff] flex flex-col items-center justify-center p-6 select-none">
+
+  <div class="w-full max-w-sm">
+    <header class="mb-8 text-center">
+      <h1 class="text-3xl font-black text-gray-900">Laskuharjoitus</h1>
+      <p class="text-gray-500 font-medium mt-1">Nelinumeroiset laskut</p>
+      <!-- type toggle -->
+      <div class="flex justify-center gap-2 mt-4">
+        <button id="btn-plus"  onclick="setType('plus')"  class="px-4 py-1.5 rounded-full text-sm font-bold transition-all">➕ Yhteenlasku</button>
+        <button id="btn-minus" onclick="setType('minus')" class="px-4 py-1.5 rounded-full text-sm font-bold transition-all">➖ Vähennyslasku</button>
+        <button id="btn-both"  onclick="setType('both')"  class="px-4 py-1.5 rounded-full text-sm font-bold transition-all">🔀 Molemmat</button>
+      </div>
+    </header>
+
+    <!-- Card -->
+    <div class="card-scene w-full h-64" id="scene" onclick="flip()">
+      <div class="card-inner" id="card">
+        <!-- Front -->
+        <div class="card-face shadow-[0_6px_24px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.90)] backdrop-blur-xl"
+             style="background:linear-gradient(135deg,rgba(37,99,235,0.13),rgba(255,255,255,0.88));border:1.5px solid rgba(37,99,235,0.22)">
+          <div id="problem" class="text-5xl font-black text-gray-900 tracking-tight text-center px-6"></div>
+          <div class="text-xs font-bold text-blue-500 uppercase tracking-wider mt-6">Napauta → vastaus</div>
+        </div>
+        <!-- Back -->
+        <div class="card-face card-back shadow-[0_6px_24px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.90)] backdrop-blur-xl"
+             style="background:linear-gradient(135deg,rgba(34,197,94,0.15),rgba(255,255,255,0.88));border:1.5px solid rgba(34,197,94,0.25)">
+          <div id="answer" class="text-6xl font-black text-gray-900"></div>
+          <div class="text-xs font-bold text-green-600 uppercase tracking-wider mt-6">Vastaus</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats + next -->
+    <div class="flex items-center justify-between mt-6 px-1">
+      <div class="text-sm font-bold text-gray-400">
+        <span id="count">1</span>. kortti
+      </div>
+      <div class="flex gap-2">
+        <button onclick="nextCard(false)"
+          class="px-5 py-2.5 rounded-full text-sm font-bold text-red-500 bg-white/80 border border-white/90 shadow-[0_2px_12px_rgba(0,0,0,0.08)] active:scale-95 transition-all">
+          ✗ Vaikea
+        </button>
+        <button onclick="nextCard(true)"
+          class="px-5 py-2.5 rounded-full text-sm font-bold text-white shadow-[0_4px_16px_rgba(37,99,235,0.30)] active:scale-95 transition-all"
+          style="background:#2563eb">
+          ✓ Osattu
+        </button>
+      </div>
+    </div>
+
+    <!-- Score -->
+    <div class="mt-6 rounded-3xl p-4 text-center shadow-[0_2px_12px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur-xl bg-white/75 border border-white/90">
+      <div class="flex justify-center gap-8">
+        <div>
+          <div id="score-ok" class="text-3xl font-black text-green-600">0</div>
+          <div class="text-xs font-bold text-gray-400 uppercase tracking-wide">Osattu</div>
+        </div>
+        <div>
+          <div id="score-hard" class="text-3xl font-black text-red-500">0</div>
+          <div class="text-xs font-bold text-gray-400 uppercase tracking-wide">Vaikea</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let type = 'both';
+    let cardCount = 1;
+    let scoreOk = 0;
+    let scoreHard = 0;
+    let isFlipped = false;
+    let currentAnswer = 0;
+
+    function setType(t) {
+      type = t;
+      updateButtons();
+      newProblem();
+    }
+
+    function updateButtons() {
+      const styles = {
+        active: 'bg-blue-600 text-white shadow-md',
+        inactive: 'bg-white/80 text-gray-600 border border-white/90 shadow-sm'
+      };
+      ['plus','minus','both'].forEach(id => {
+        const btn = document.getElementById('btn-' + id);
+        btn.className = 'px-4 py-1.5 rounded-full text-sm font-bold transition-all ' +
+          (type === id ? styles.active : styles.inactive);
+      });
+    }
+
+    function rand(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function newProblem() {
+      isFlipped = false;
+      document.getElementById('card').classList.remove('flipped');
+
+      const useType = type === 'both'
+        ? (Math.random() < 0.5 ? 'plus' : 'minus')
+        : type;
+
+      let a, b, result, symbol;
+      if (useType === 'plus') {
+        a = rand(1000, 9999);
+        b = rand(1000, 9999 - a + 1000);
+        result = a + b;
+        symbol = '+';
+      } else {
+        a = rand(1000, 9999);
+        b = rand(1000, a);
+        result = a - b;
+        symbol = '−';
+      }
+
+      currentAnswer = result;
+
+      document.getElementById('problem').innerHTML =
+        `${a.toLocaleString('fi')}<br><span class="text-blue-500">${symbol}</span> ${b.toLocaleString('fi')}`;
+      document.getElementById('answer').textContent = result.toLocaleString('fi');
+
+      // pop-in animation
+      const scene = document.getElementById('scene');
+      scene.classList.remove('new-card');
+      void scene.offsetWidth;
+      scene.classList.add('new-card');
+    }
+
+    function flip() {
+      isFlipped = !isFlipped;
+      document.getElementById('card').classList.toggle('flipped', isFlipped);
+    }
+
+    function nextCard(wasOk) {
+      if (wasOk) {
+        scoreOk++;
+        document.getElementById('score-ok').textContent = scoreOk;
+      } else {
+        scoreHard++;
+        document.getElementById('score-hard').textContent = scoreHard;
+      }
+      cardCount++;
+      document.getElementById('count').textContent = cardCount;
+      newProblem();
+    }
+
+    // Init
+    updateButtons();
+    newProblem();
+  </script>
+</body>
+</html>

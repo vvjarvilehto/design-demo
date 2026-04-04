@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nuorten Tietovisa</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#16a34a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Tietovisa" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Nunito', sans-serif; }
+    .btn-topic { transition: transform 0.13s ease, box-shadow 0.13s ease; }
+    .btn-topic:active { transform: scale(0.96); }
+    .btn-answer { transition: transform 0.12s ease, background 0.15s ease; }
+    .btn-answer:active { transform: scale(0.97); }
+    .btn-answer.correct { background: linear-gradient(135deg,#bbf7d0,#dcfce7) !important; border-color: #16a34a !important; }
+    .btn-answer.wrong   { background: linear-gradient(135deg,#fecaca,#fee2e2) !important; border-color: #dc2626 !important; }
+    .btn-answer.reveal  { opacity: 0.45; }
+    .progress-bar { transition: width 0.4s cubic-bezier(.4,0,.2,1); }
+    @keyframes pop-in {
+      0%   { transform: scale(0.85); opacity: 0; }
+      60%  { transform: scale(1.04); }
+      100% { transform: scale(1);    opacity: 1; }
+    }
+    .pop-in { animation: pop-in 0.3s ease forwards; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#f0fdf4] p-5">
+
+<div class="max-w-sm mx-auto">
+
+  <a href="index.html" class="inline-flex items-center gap-1 text-sm font-semibold text-gray-400 hover:text-gray-600 mb-6 mt-2 transition-colors">
+    ‹ Takaisin
+  </a>
+
+  <!-- ── NÄKYMÄ 1: Aihevalinta ── -->
+  <div id="screen-topics">
+    <header class="mb-7">
+      <div class="text-4xl mb-2">🎯</div>
+      <h1 class="text-3xl font-black text-gray-900">Nuorten Tietovisa</h1>
+      <div class="inline-block mt-1 px-3 py-0.5 rounded-full text-xs font-black text-white" style="background:#16a34a">10–15 vuotiaille</div>
+      <p class="text-gray-500 font-medium mt-2">Valitse aihe ja testaa tietosi!</p>
+    </header>
+    <div class="space-y-3" id="topic-list"></div>
+  </div>
+
+  <!-- ── NÄKYMÄ 2: Kysymys ── -->
+  <div id="screen-quiz" class="hidden">
+    <div class="flex items-center justify-between mb-1">
+      <span id="q-label" class="text-sm font-bold text-gray-400"></span>
+      <span id="score-label" class="text-sm font-bold text-gray-400"></span>
+    </div>
+    <div class="w-full h-2 bg-gray-200 rounded-full mb-6 overflow-hidden">
+      <div id="progress-bar" class="progress-bar h-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-400" style="width:0%"></div>
+    </div>
+
+    <div id="q-card" class="rounded-3xl p-5 mb-5"
+         style="background:linear-gradient(135deg,rgba(22,163,74,0.10),rgba(255,255,255,0.96));border:1.5px solid rgba(22,163,74,0.22);box-shadow:0 6px 24px rgba(0,0,0,0.09),inset 0 1px 0 rgba(255,255,255,0.90)">
+      <div id="q-category" class="text-xs font-bold uppercase tracking-widest mb-3" style="color:#16a34a"></div>
+      <p id="q-text" class="text-gray-900 font-black text-xl leading-snug"></p>
+    </div>
+
+    <div id="answers" class="space-y-2.5"></div>
+
+    <button id="btn-next" class="hidden w-full mt-5 py-3.5 rounded-2xl font-black text-white text-base"
+            style="background:linear-gradient(135deg,#16a34a,#22c55e);box-shadow:0 4px 18px rgba(22,163,74,0.35)"
+            onclick="nextQuestion()">
+      Seuraava kysymys →
+    </button>
+    <button id="btn-finish" class="hidden w-full mt-5 py-3.5 rounded-2xl font-black text-white text-base"
+            style="background:linear-gradient(135deg,#0284c7,#38bdf8);box-shadow:0 4px 18px rgba(2,132,199,0.35)"
+            onclick="showResults()">
+      Katso tulokset 🏆
+    </button>
+  </div>
+
+  <!-- ── NÄKYMÄ 3: Tulokset ── -->
+  <div id="screen-results" class="hidden text-center pop-in">
+    <div id="result-emoji" class="text-6xl mt-4 mb-4"></div>
+    <h2 class="text-3xl font-black text-gray-900 mb-1">Tulos</h2>
+    <p id="result-topic" class="text-gray-400 font-semibold mb-6"></p>
+
+    <div class="rounded-3xl p-6 mb-6"
+         style="background:linear-gradient(135deg,rgba(22,163,74,0.11),rgba(255,255,255,0.97));border:1.5px solid rgba(22,163,74,0.22);box-shadow:0 6px 24px rgba(0,0,0,0.09)">
+      <div id="score-big" class="text-6xl font-black" style="color:#16a34a"></div>
+      <div class="text-gray-500 font-semibold mt-1">oikein 10:stä</div>
+      <div id="result-msg" class="mt-4 text-gray-700 font-bold text-lg"></div>
+    </div>
+
+    <div class="space-y-3">
+      <button onclick="retryQuiz()" class="w-full py-3.5 rounded-2xl font-black text-white text-base"
+              style="background:linear-gradient(135deg,#16a34a,#22c55e);box-shadow:0 4px 18px rgba(22,163,74,0.30)">
+        Pelaa uudelleen
+      </button>
+      <button onclick="goTopics()" class="w-full py-3.5 rounded-2xl font-black text-base"
+              style="background:rgba(22,163,74,0.10);color:#16a34a">
+        Vaihda aihe
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const TOPICS = [
+  {
+    id: 'yleistieto',
+    name: 'Yleistieto',
+    emoji: '🌍',
+    color: ['rgba(37,99,235,0.12)', 'rgba(37,99,235,0.22)', '#1d4ed8'],
+    questions: [
+      { q: 'Kuinka monta planeettaa aurinkokunmassamme on?', a: 2, opts: ['6', '7', '8', '9'] },
+      { q: 'Kuinka monta väriä sateenkaaressa on?', a: 2, opts: ['5', '6', '7', '8'] },
+      { q: 'Mikä on maailman korkein rakennus?', a: 2, opts: ['Eiffel-torni', 'Empire State', 'Burj Khalifa', 'Tokyo Skytree'] },
+      { q: 'Mikä eläin on maailman nopein maaeläin?', a: 1, opts: ['Leijona', 'Gepardi', 'Strutsi', 'Villihevonen'] },
+      { q: 'Mikä on maailman pisin joki?', a: 1, opts: ['Amazoni', 'Niili', 'Jangtsejoki', 'Mississippi'] },
+      { q: 'Mikä on maailman suurin valtameri?', a: 3, opts: ['Atlantti', 'Arktinen', 'Intian valtameri', 'Tyyni valtameri'] },
+      { q: 'Montako tuntia on vuorokaudessa?', a: 1, opts: ['22', '24', '25', '26'] },
+      { q: 'Kuinka monta päivää on karkausvuodessa?', a: 2, opts: ['364', '365', '366', '367'] },
+      { q: 'Mikä on maailman äidinkieliltään eniten puhuttu kieli?', a: 2, opts: ['Englanti', 'Espanja', 'Mandariinikiina', 'Hindi'] },
+      { q: 'Montako kuukautta on vuodessa?', a: 2, opts: ['10', '11', '12', '13'] },
+    ]
+  },
+  {
+    id: 'elaimet',
+    name: 'Eläimet & Luonto',
+    emoji: '🐾',
+    color: ['rgba(13,148,136,0.12)', 'rgba(13,148,136,0.22)', '#0f766e'],
+    questions: [
+      { q: 'Montako jalkaa hämähäkillä on?', a: 2, opts: ['4', '6', '8', '10'] },
+      { q: 'Mikä on maailman suurin eläin?', a: 1, opts: ['Elefantti', 'Sinivalas', 'Hailevähai', 'Jättiläismanta'] },
+      { q: 'Missä maassa jättiläispanda elää luonnossa?', a: 2, opts: ['Japanissa', 'Australiassa', 'Kiinassa', 'Intiassa'] },
+      { q: 'Montako siipeä perhosella on?', a: 1, opts: ['2', '4', '6', '8'] },
+      { q: 'Mikä eläin rakentaa patoja ja asuu niiden takana?', a: 0, opts: ['Majava', 'Saukko', 'Näätä', 'Mäyrä'] },
+      { q: 'Mikä lintu ei osaa lentää?', a: 1, opts: ['Kotka', 'Strutsi', 'Pelikaani', 'Papukaija'] },
+      { q: 'Mitä eläimiä kutsutaan sammakkoeläimiksi?', a: 2, opts: ['Krokotiili ja kilpikonna', 'Käärme ja liskoihin', 'Sammakko ja salamanteri', 'Merimies ja ankka'] },
+      { q: 'Kuinka kauan elefantti kantaa poikastaan ennen synnytystä?', a: 3, opts: ['6 kuukautta', '12 kuukautta', '18 kuukautta', '22 kuukautta'] },
+      { q: 'Mikä on maailman suurin lintu?', a: 0, opts: ['Strutsi', 'Kotka', 'Pelikaani', 'Emu'] },
+      { q: 'Millä eläimellä on pisin kaula?', a: 1, opts: ['Kameli', 'Kirahvi', 'Flamingo', 'Strutsi'] },
+    ]
+  },
+  {
+    id: 'elokuvat',
+    name: 'Elokuvat & Sarjat',
+    emoji: '🎬',
+    color: ['rgba(219,39,119,0.12)', 'rgba(219,39,119,0.22)', '#9d174d'],
+    questions: [
+      { q: 'Mikä on Harry Potterin taikakoulun nimi suomeksi?', a: 1, opts: ['Dumbledore', 'Tylypahka', 'Diagon', 'Azkaban'] },
+      { q: 'Kenellä on jäätymisvoima Disneyn Frozen-elokuvassa?', a: 1, opts: ['Annalla', 'Elsalla', 'Kristoffilla', 'Olafilla'] },
+      { q: 'Mistä elokuvasta on leijonapoika Simba?', a: 2, opts: ['Tarzan', 'Dumbo', 'Leijonakuningas', 'Bambi'] },
+      { q: 'Mikä on Minecraft-pelin hiljaa hiipivä räjähtävä vihollinen?', a: 2, opts: ['Zombie', 'Skeleton', 'Creeper', 'Enderman'] },
+      { q: 'Millä supersankarilla on hämähäkin voimia?', a: 2, opts: ['Batman', 'Superman', 'Hämähäkkimies', 'Hulk'] },
+      { q: 'Mikä Disney-elokuva kertoo kalasta jonka poika katoaa?', a: 2, opts: ['Shark Tale', 'Atlantis', 'Etsitään Nemoa', 'Luca'] },
+      { q: 'Mikä on Pixarin Toy Storyn tärkein päähenkilö?', a: 1, opts: ['Buzz Lightyear', 'Woody', 'Rex', 'Hamm'] },
+      { q: 'Missä maassa tapahtuu Disneyn Mulan-elokuva?', a: 2, opts: ['Japanissa', 'Koreassa', 'Kiinassa', 'Thaimaassa'] },
+      { q: 'Kuka sanoo "Hakuna Matata" Leijonakuninkaassa?', a: 1, opts: ['Simba', 'Timon ja Pumba', 'Rafiki', 'Mufasa'] },
+      { q: 'Mikä on Fortnite-pelissä tavoitteena?', a: 2, opts: ['Kerätä eniten kultaa', 'Rakentaa suurin linna', 'Olla viimeinen selviytyjä', 'Voittaa kilpa-ajo'] },
+    ]
+  },
+  {
+    id: 'urheilu',
+    name: 'Urheilu',
+    emoji: '⚽',
+    color: ['rgba(22,163,74,0.12)', 'rgba(22,163,74,0.22)', '#166534'],
+    questions: [
+      { q: 'Montako pelaajaa on jalkapallojoukkueessa kentällä?', a: 2, opts: ['9', '10', '11', '12'] },
+      { q: 'Montako pelaajaa on koripallojoukkueessa kentällä?', a: 1, opts: ['4', '5', '6', '7'] },
+      { q: 'Montako pelaajaa on lentopallon joukkueessa kentällä?', a: 1, opts: ['5', '6', '7', '8'] },
+      { q: 'Millä englanninkielisellä nimellä tunnetaan sulkapallo?', a: 1, opts: ['Squash', 'Badminton', 'Tennis', 'Pickleball'] },
+      { q: 'Missä lajissa pelataan kiekolla jäällä?', a: 1, opts: ['Jalkapallossa', 'Jääkiekossa', 'Sulkapallossa', 'Golfissa'] },
+      { q: 'Mikä on yleisurheilun lyhyin olympialaisten juoksumatka?', a: 1, opts: ['60 m', '100 m', '200 m', '400 m'] },
+      { q: 'Missä kaupungissa järjestettiin 2024 kesäolympialaiset?', a: 2, opts: ['Lontoossa', 'Tokiossa', 'Pariisissa', 'Los Angelesissa'] },
+      { q: 'Montako erää on täyspitkässä jääkiekko-ottelussa?', a: 1, opts: ['2', '3', '4', '5'] },
+      { q: 'Mikä maa voitti jalkapallon MM-kultaa 2018?', a: 2, opts: ['Brasilia', 'Kroatia', 'Ranska', 'Belgia'] },
+      { q: 'Montako pistettä saa tennisessä palvelun suoraan voittamisesta (ässä)?', a: 0, opts: ['1 piste', 'Ei erityispisteitä', '2 pistettä', '3 pistettä'] },
+    ]
+  },
+  {
+    id: 'maantieto',
+    name: 'Maantieto',
+    emoji: '🗺️',
+    color: ['rgba(234,88,12,0.12)', 'rgba(234,88,12,0.22)', '#9a3412'],
+    questions: [
+      { q: 'Mikä on Suomen pääkaupunki?', a: 2, opts: ['Turku', 'Tampere', 'Helsinki', 'Oulu'] },
+      { q: 'Millä mantereella Egypti sijaitsee?', a: 2, opts: ['Euroopassa', 'Aasiassa', 'Afrikassa', 'Australiassa'] },
+      { q: 'Missä maassa Eiffel-torni sijaitsee?', a: 3, opts: ['Italiassa', 'Espanjassa', 'Saksassa', 'Ranskassa'] },
+      { q: 'Mikä on maailman pienin valtio?', a: 1, opts: ['Monaco', 'Vatikaani', 'San Marino', 'Liechtenstein'] },
+      { q: 'Mikä on Suomen naapurimaa idässä?', a: 3, opts: ['Ruotsi', 'Norja', 'Viro', 'Venäjä'] },
+      { q: 'Kuinka monta mannerta maailmassa on?', a: 2, opts: ['5', '6', '7', '8'] },
+      { q: 'Missä maassa sijaitsee Colosseum?', a: 3, opts: ['Kreikassa', 'Ranskassa', 'Espanjassa', 'Italiassa'] },
+      { q: 'Mikä valtameri on Euroopan ja Amerikan välissä?', a: 2, opts: ['Tyyni valtameri', 'Intian valtameri', 'Atlantin valtameri', 'Arktinen'] },
+      { q: 'Missä maassa sijaitsee Fuji-vuori?', a: 2, opts: ['Kiinassa', 'Koreassa', 'Japanissa', 'Taiwanissa'] },
+      { q: 'Mikä on Pohjoismaiden suurin maa pinta-alaltaan?', a: 2, opts: ['Suomi', 'Norja', 'Ruotsi', 'Tanska'] },
+    ]
+  },
+  {
+    id: 'pelit',
+    name: 'Pelit & Teknologia',
+    emoji: '🎮',
+    color: ['rgba(79,70,229,0.12)', 'rgba(79,70,229,0.22)', '#4338ca'],
+    questions: [
+      { q: 'Mikä suomalainen yritys kehitti Angry Birds -pelin?', a: 2, opts: ['Nokia', 'Supercell', 'Rovio', 'Remedy'] },
+      { q: 'Mikä suomalainen yritys kehitti Clash of Clans -pelin?', a: 1, opts: ['Rovio', 'Supercell', 'Nokia', 'Next Games'] },
+      { q: 'Montako bittiä on yhdessä tavussa (byte)?', a: 1, opts: ['4', '8', '16', '32'] },
+      { q: 'Mitä lyhennettä käytetään tekstiviestistä?', a: 1, opts: ['MMS', 'SMS', 'GPS', 'USB'] },
+      { q: 'Mikä on Fortniten kehittäjäyritys?', a: 2, opts: ['Activision', 'EA', 'Epic Games', 'Ubisoft'] },
+      { q: 'Missä vuosikymmenellä internet tuli yleiseen käyttöön?', a: 2, opts: ['1970-luvulla', '1980-luvulla', '1990-luvulla', '2000-luvulla'] },
+      { q: 'Mikä on maailman myydyin videopelisarja kaikkien aikojen?', a: 2, opts: ['Call of Duty', 'FIFA', 'Mario', 'Pokémon'] },
+      { q: 'Missä vuodessa ensimmäinen iPhone julkaistiin?', a: 2, opts: ['2005', '2006', '2007', '2008'] },
+      { q: 'Mitä PDF lyhenne tarkoittaa englanniksi?', a: 1, opts: ['Personal Data File', 'Portable Document Format', 'Public Digital Format', 'Print Data File'] },
+      { q: 'Mikä on Roblox-pelissä virtuaalivaluutan nimi?', a: 1, opts: ['V-Bucks', 'Robux', 'Coins', 'Gems'] },
+    ]
+  },
+];
+
+// ── TILA ──────────────────────────────────────────────────────────────────────
+let currentTopic = null;
+let questions    = [];
+let qIndex       = 0;
+let score        = 0;
+let answered     = false;
+
+// ── ALUSTUS ───────────────────────────────────────────────────────────────────
+function init() {
+  const list = document.getElementById('topic-list');
+  TOPICS.forEach(t => {
+    const [bg, border, accent] = t.color;
+    const btn = document.createElement('button');
+    btn.className = 'btn-topic w-full rounded-3xl px-5 py-4 text-left';
+    btn.style.cssText = `background:linear-gradient(135deg,${bg},rgba(255,255,255,0.95));border:1.5px solid ${border};box-shadow:0 6px 24px rgba(0,0,0,0.09),inset 0 1px 0 rgba(255,255,255,0.90)`;
+    btn.innerHTML = `
+      <div class="flex items-center gap-4">
+        <div class="text-4xl">${t.emoji}</div>
+        <div>
+          <div class="font-black text-gray-900 text-lg">${t.name}</div>
+          <div class="text-sm font-semibold" style="color:${accent}">${t.questions.length} kysymystä</div>
+        </div>
+        <div class="ml-auto text-gray-300 text-xl">›</div>
+      </div>`;
+    btn.onclick = () => startQuiz(t.id);
+    list.appendChild(btn);
+  });
+}
+
+// ── LOGIIKKA ──────────────────────────────────────────────────────────────────
+function startQuiz(topicId) {
+  currentTopic = TOPICS.find(t => t.id === topicId);
+  questions    = shuffle([...currentTopic.questions]).slice(0, 10);
+  qIndex       = 0;
+  score        = 0;
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = questions[qIndex];
+  document.getElementById('q-label').textContent = `Kysymys ${qIndex + 1} / ${questions.length}`;
+  document.getElementById('score-label').textContent = `${score} ✓`;
+  document.getElementById('progress-bar').style.width = `${(qIndex / questions.length) * 100}%`;
+  document.getElementById('q-category').textContent = currentTopic.emoji + '  ' + currentTopic.name;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('btn-next').classList.add('hidden');
+  document.getElementById('btn-finish').classList.add('hidden');
+
+  const container = document.getElementById('answers');
+  container.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-answer w-full text-left rounded-2xl px-4 py-3.5 font-bold text-gray-800';
+    btn.style.cssText = 'background:rgba(255,255,255,0.92);border:1.5px solid rgba(0,0,0,0.10);box-shadow:0 2px 8px rgba(0,0,0,0.07)';
+    btn.innerHTML = `<span class="font-black text-gray-400 mr-2">${String.fromCharCode(65+i)}.</span>${opt}`;
+    btn.onclick = () => selectAnswer(i);
+    container.appendChild(btn);
+  });
+}
+
+function selectAnswer(index) {
+  if (answered) return;
+  answered = true;
+  const q = questions[qIndex];
+  const btns = document.getElementById('answers').querySelectorAll('button');
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.a)                    b.classList.add('correct');
+    else if (i === index && i !== q.a) b.classList.add('wrong');
+    else                               b.classList.add('reveal');
+  });
+  if (index === q.a) score++;
+  if (qIndex < questions.length - 1) document.getElementById('btn-next').classList.remove('hidden');
+  else                                document.getElementById('btn-finish').classList.remove('hidden');
+}
+
+function nextQuestion() { qIndex++; renderQuestion(); }
+
+function showResults() {
+  document.getElementById('progress-bar').style.width = '100%';
+  showScreen('results');
+  document.getElementById('score-big').textContent = `${score} / 10`;
+  document.getElementById('result-topic').textContent = currentTopic.emoji + '  ' + currentTopic.name;
+  let emoji, msg;
+  if (score === 10)    { emoji = '🏆'; msg = 'Täydellinen! Olet tietomestari!'; }
+  else if (score >= 8) { emoji = '🌟'; msg = 'Mahtava tulos, hienoa!'; }
+  else if (score >= 6) { emoji = '👍'; msg = 'Hyvä suoritus – jatka niin!'; }
+  else if (score >= 4) { emoji = '📚'; msg = 'Ei paha, harjoittele lisää!'; }
+  else                 { emoji = '💪'; msg = 'Älä lannistu, yritä uudelleen!'; }
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-msg').textContent = msg;
+}
+
+function retryQuiz() { startQuiz(currentTopic.id); }
+function goTopics()  { showScreen('topics'); }
+
+function showScreen(name) {
+  ['topics','quiz','results'].forEach(s =>
+    document.getElementById(`screen-${s}`).classList.toggle('hidden', s !== name)
+  );
+  if (name === 'results') document.getElementById('screen-results').classList.add('pop-in');
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+init();
+
+// ── SERVICE WORKER ────────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>

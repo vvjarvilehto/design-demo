@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Työkalut</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#7c3aed" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Tietovisa" />
+  <link rel="apple-touch-icon" href="icon.svg" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
@@ -30,6 +36,19 @@
           <div>
             <div class="font-black text-gray-900 text-lg">Laskuharjoitus</div>
             <div class="text-sm text-gray-500 font-medium">Nelinumeroiset yhteen- ja vähennyslaskut kääntökorteilla</div>
+          </div>
+          <div class="ml-auto text-gray-300 text-xl">›</div>
+        </div>
+      </a>
+
+      <!-- Nuorten tietovisa -->
+      <a href="trivia-nuoret.html" class="card block rounded-3xl px-5 py-4 no-underline"
+         style="background:linear-gradient(135deg,rgba(22,163,74,0.13),rgba(255,255,255,0.95));border:1.5px solid rgba(22,163,74,0.22);box-shadow:0 6px 24px rgba(0,0,0,0.10),inset 0 1px 0 rgba(255,255,255,0.90)">
+        <div class="flex items-center gap-4">
+          <div class="text-4xl">🎯</div>
+          <div>
+            <div class="font-black text-gray-900 text-lg">Nuorten Tietovisa</div>
+            <div class="text-sm text-gray-500 font-medium">Tietovisa 10–15 vuotiaille eri aiheista</div>
           </div>
           <div class="ml-auto text-gray-300 text-xl">›</div>
         </div>
@@ -64,5 +83,10 @@
     </div>
   </div>
 
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+</script>
 </body>
 </html>

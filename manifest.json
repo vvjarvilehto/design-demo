@@ -1,0 +1,19 @@
+{
+  "name": "Tietovisa",
+  "short_name": "Tietovisa",
+  "description": "Testaa tietosi eri aiheista – nuorten ja aikuisten versio",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f3f6ff",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

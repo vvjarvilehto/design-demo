@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kiekkokisa — Värimaailma Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Nunito', sans-serif; }
+    .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  </style>
+</head>
+<body class="bg-gray-200 py-8 px-4">
+
+  <div class="max-w-md mx-auto mb-8">
+    <h1 class="text-2xl font-black text-gray-800 mb-1">Kiekkokisa — Värimaailma</h1>
+    <p class="text-gray-500 text-sm">Ratalistaus eri teemaväreillä</p>
+    <div class="flex gap-2 mt-4 flex-wrap">
+      <a href="#green"  class="px-3 py-1 rounded-full bg-green-100  text-green-700  text-xs font-black">🟢 Vihreä</a>
+      <a href="#blue"   class="px-3 py-1 rounded-full bg-blue-100   text-blue-700   text-xs font-black">🔵 Sininen</a>
+      <a href="#teal"   class="px-3 py-1 rounded-full bg-teal-100   text-teal-700   text-xs font-black">🩵 Teal</a>
+      <a href="#indigo" class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-black">🟣 Indigo</a>
+      <a href="#orange" class="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-black">🟠 Oranssi</a>
+    </div>
+  </div>
+
+  <!-- ===== GREEN ===== -->
+  <div id="green" class="max-w-md mx-auto mb-12">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-black mb-3">🟢 Vihreä (nykyinen)</div>
+    <div class="bg-[#f3f6ff] rounded-3xl p-4 space-y-2">
+      <div class="text-sm font-black text-gray-600 uppercase tracking-wide px-1 mb-3">Radat</div>
+      <!-- Top course -->
+      <div class="glass rounded-3xl px-4 py-3 shadow-md" style="background:linear-gradient(135deg,rgba(22,163,74,0.13),rgba(255,255,255,0.85));border:1.5px solid rgba(22,163,74,0.22)">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">⭐ Herttoniemen frisbeegolf</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">18×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-green-700">-5</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-green-700">-0.2</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <!-- Other courses -->
+      <div class="glass bg-white/75 rounded-3xl px-4 py-3 shadow-sm border border-white/90">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">Vierumäki Disc Golf</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">5×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-green-700">-6</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-green-700">-3.4</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <div class="glass bg-white/75 rounded-3xl px-4 py-3 shadow-sm border border-white/90">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">Kippasuo Pro DiscG</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">3×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-green-700">-15</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-green-700">-14.3</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <!-- Filter pills for context -->
+      <div class="flex gap-2 pt-2">
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-white shadow-md" style="background:#16a34a">Kaikki</div>
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-gray-600 bg-white/80 border border-white/90 shadow-sm">12 kk</div>
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-gray-600 bg-white/80 border border-white/90 shadow-sm">3 kk</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BLUE ===== -->
+  <div id="blue" class="max-w-md mx-auto mb-12">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-black mb-3">🔵 Sininen (edellinen)</div>
+    <div class="bg-[#f3f6ff] rounded-3xl p-4 space-y-2">
+      <div class="text-sm font-black text-gray-600 uppercase tracking-wide px-1 mb-3">Radat</div>
+      <div class="glass rounded-3xl px-4 py-3 shadow-md" style="background:linear-gradient(135deg,rgba(37,99,235,0.13),rgba(255,255,255,0.85));border:1.5px solid rgba(37,99,235,0.22)">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">⭐ Herttoniemen frisbeegolf</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">18×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-blue-700">-5</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-blue-700">-0.2</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <div class="glass bg-white/75 rounded-3xl px-4 py-3 shadow-sm border border-white/90">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">Vierumäki Disc Golf</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">5×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-blue-700">-6</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-blue-700">-3.4</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <div class="glass bg-white/75 rounded-3xl px-4 py-3 shadow-sm border border-white/90">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">Kippasuo Pro DiscG</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">3×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-blue-700">-15</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-blue-700">-14.3</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-white shadow-md" style="background:#2563eb">Kaikki</div>
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-gray-600 bg-white/80 border border-white/90 shadow-sm">12 kk</div>
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-gray-600 bg-white/80 border border-white/90 shadow-sm">3 kk</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TEAL ===== -->
+  <div id="teal" class="max-w-md mx-auto mb-12">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-100 text-teal-700 text-xs font-black mb-3">🩵 Teal</div>
+    <div class="bg-[#f3f6ff] rounded-3xl p-4 space-y-2">
+      <div class="text-sm font-black text-gray-600 uppercase tracking-wide px-1 mb-3">Radat</div>
+      <div class="glass rounded-3xl px-4 py-3 shadow-md" style="background:linear-gradient(135deg,rgba(13,148,136,0.13),rgba(255,255,255,0.85));border:1.5px solid rgba(13,148,136,0.22)">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">⭐ Herttoniemen frisbeegolf</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">18×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-teal-700">-5</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-teal-700">-0.2</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <div class="glass bg-white/75 rounded-3xl px-4 py-3 shadow-sm border border-white/90">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">Vierumäki Disc Golf</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">5×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-teal-700">-6</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-teal-700">-3.4</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <div class="glass bg-white/75 rounded-3xl px-4 py-3 shadow-sm border border-white/90">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">Kippasuo Pro DiscG</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">3×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-teal-700">-15</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-teal-700">-14.3</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-white shadow-md" style="background:#0d9488">Kaikki</div>
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-gray-600 bg-white/80 border border-white/90 shadow-sm">12 kk</div>
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-gray-600 bg-white/80 border border-white/90 shadow-sm">3 kk</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== INDIGO ===== -->
+  <div id="indigo" class="max-w-md mx-auto mb-12">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-black mb-3">🟣 Indigo</div>
+    <div class="bg-[#f3f6ff] rounded-3xl p-4 space-y-2">
+      <div class="text-sm font-black text-gray-600 uppercase tracking-wide px-1 mb-3">Radat</div>
+      <div class="glass rounded-3xl px-4 py-3 shadow-md" style="background:linear-gradient(135deg,rgba(79,70,229,0.13),rgba(255,255,255,0.85));border:1.5px solid rgba(79,70,229,0.22)">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">⭐ Herttoniemen frisbeegolf</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">18×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-indigo-700">-5</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-indigo-700">-0.2</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <div class="glass bg-white/75 rounded-3xl px-4 py-3 shadow-sm border border-white/90">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">Vierumäki Disc Golf</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">5×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-indigo-700">-6</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-indigo-700">-3.4</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <div class="glass bg-white/75 rounded-3xl px-4 py-3 shadow-sm border border-white/90">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">Kippasuo Pro DiscG</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">3×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-indigo-700">-15</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-indigo-700">-14.3</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-white shadow-md" style="background:#4f46e5">Kaikki</div>
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-gray-600 bg-white/80 border border-white/90 shadow-sm">12 kk</div>
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-gray-600 bg-white/80 border border-white/90 shadow-sm">3 kk</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ORANGE ===== -->
+  <div id="orange" class="max-w-md mx-auto mb-12">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-black mb-3">🟠 Oranssi</div>
+    <div class="bg-[#f3f6ff] rounded-3xl p-4 space-y-2">
+      <div class="text-sm font-black text-gray-600 uppercase tracking-wide px-1 mb-3">Radat</div>
+      <div class="glass rounded-3xl px-4 py-3 shadow-md" style="background:linear-gradient(135deg,rgba(234,88,12,0.13),rgba(255,255,255,0.85));border:1.5px solid rgba(234,88,12,0.22)">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">⭐ Herttoniemen frisbeegolf</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">18×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-orange-700">-5</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-orange-700">-0.2</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <div class="glass bg-white/75 rounded-3xl px-4 py-3 shadow-sm border border-white/90">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">Vierumäki Disc Golf</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">5×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-orange-700">-6</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-orange-700">-3.4</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <div class="glass bg-white/75 rounded-3xl px-4 py-3 shadow-sm border border-white/90">
+        <div class="flex items-start justify-between gap-3">
+          <div class="font-black text-gray-900">Kippasuo Pro DiscG</div>
+          <div class="text-sm font-bold text-gray-400 shrink-0">3×</div>
+        </div>
+        <div class="flex gap-5 mt-2">
+          <div><div class="text-lg font-black text-orange-700">-15</div><div class="text-xs text-gray-400">Paras</div></div>
+          <div><div class="text-lg font-black text-orange-700">-14.3</div><div class="text-xs text-gray-400">Ka.</div></div>
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-white shadow-md" style="background:#ea580c">Kaikki</div>
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-gray-600 bg-white/80 border border-white/90 shadow-sm">12 kk</div>
+        <div class="px-4 py-1.5 rounded-full text-sm font-bold text-gray-600 bg-white/80 border border-white/90 shadow-sm">3 kk</div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

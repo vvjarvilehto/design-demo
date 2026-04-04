@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tietovisa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Nunito', sans-serif; }
+    .btn-topic { transition: transform 0.13s ease, box-shadow 0.13s ease; }
+    .btn-topic:active { transform: scale(0.96); }
+    .btn-answer { transition: transform 0.12s ease, background 0.15s ease; }
+    .btn-answer:active { transform: scale(0.97); }
+    .btn-answer.correct { background: linear-gradient(135deg,#bbf7d0,#dcfce7) !important; border-color: #16a34a !important; }
+    .btn-answer.wrong   { background: linear-gradient(135deg,#fecaca,#fee2e2) !important; border-color: #dc2626 !important; }
+    .btn-answer.reveal  { opacity: 0.45; }
+    .progress-bar { transition: width 0.4s cubic-bezier(.4,0,.2,1); }
+    @keyframes pop-in {
+      0%   { transform: scale(0.85); opacity: 0; }
+      60%  { transform: scale(1.04); }
+      100% { transform: scale(1);    opacity: 1; }
+    }
+    .pop-in { animation: pop-in 0.3s ease forwards; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#f3f6ff] p-5">
+
+<div class="max-w-sm mx-auto">
+
+  <!-- Takaisin-linkki -->
+  <a href="index.html" class="inline-flex items-center gap-1 text-sm font-semibold text-gray-400 hover:text-gray-600 mb-6 mt-2 transition-colors">
+    ‹ Takaisin
+  </a>
+
+  <!-- ── NÄKYMÄ 1: Aihevalinta ── -->
+  <div id="screen-topics">
+    <header class="mb-7">
+      <div class="text-4xl mb-2">🧠</div>
+      <h1 class="text-3xl font-black text-gray-900">Tietovisa</h1>
+      <p class="text-gray-500 font-medium mt-1">Valitse aihe ja testaa tietosi</p>
+    </header>
+
+    <div class="space-y-3" id="topic-list"></div>
+  </div>
+
+  <!-- ── NÄKYMÄ 2: Kysymys ── -->
+  <div id="screen-quiz" class="hidden">
+    <!-- Yläpalkki -->
+    <div class="flex items-center justify-between mb-1">
+      <span id="q-label" class="text-sm font-bold text-gray-400"></span>
+      <span id="score-label" class="text-sm font-bold text-gray-400"></span>
+    </div>
+    <!-- Edistymispalkki -->
+    <div class="w-full h-2 bg-gray-200 rounded-full mb-6 overflow-hidden">
+      <div id="progress-bar" class="progress-bar h-2 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500" style="width:0%"></div>
+    </div>
+
+    <!-- Kysymyskortti -->
+    <div id="q-card" class="rounded-3xl p-5 mb-5"
+         style="background:linear-gradient(135deg,rgba(139,92,246,0.10),rgba(255,255,255,0.95));border:1.5px solid rgba(139,92,246,0.20);box-shadow:0 6px 24px rgba(0,0,0,0.09),inset 0 1px 0 rgba(255,255,255,0.90)">
+      <div id="q-category" class="text-xs font-bold uppercase tracking-widest mb-3" style="color:#7c3aed"></div>
+      <p id="q-text" class="text-gray-900 font-black text-xl leading-snug"></p>
+    </div>
+
+    <!-- Vastausvaihtoehdot -->
+    <div id="answers" class="space-y-2.5"></div>
+
+    <!-- Seuraava-nappi -->
+    <button id="btn-next" class="hidden w-full mt-5 py-3.5 rounded-2xl font-black text-white text-base transition-transform active:scale-97"
+            style="background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 4px 18px rgba(124,58,237,0.35)"
+            onclick="nextQuestion()">
+      Seuraava kysymys →
+    </button>
+    <button id="btn-finish" class="hidden w-full mt-5 py-3.5 rounded-2xl font-black text-white text-base transition-transform active:scale-97"
+            style="background:linear-gradient(135deg,#16a34a,#22c55e);box-shadow:0 4px 18px rgba(22,163,74,0.35)"
+            onclick="showResults()">
+      Katso tulokset 🏆
+    </button>
+  </div>
+
+  <!-- ── NÄKYMÄ 3: Tulokset ── -->
+  <div id="screen-results" class="hidden text-center pop-in">
+    <div id="result-emoji" class="text-6xl mt-4 mb-4"></div>
+    <h2 class="text-3xl font-black text-gray-900 mb-1">Tulos</h2>
+    <p id="result-topic" class="text-gray-400 font-semibold mb-6"></p>
+
+    <div class="rounded-3xl p-6 mb-6"
+         style="background:linear-gradient(135deg,rgba(139,92,246,0.11),rgba(255,255,255,0.97));border:1.5px solid rgba(139,92,246,0.20);box-shadow:0 6px 24px rgba(0,0,0,0.09)">
+      <div id="score-big" class="text-6xl font-black" style="color:#7c3aed"></div>
+      <div class="text-gray-500 font-semibold mt-1">oikein 10:stä</div>
+      <div id="result-msg" class="mt-4 text-gray-700 font-bold text-lg"></div>
+    </div>
+
+    <div class="space-y-3">
+      <button onclick="retryQuiz()" class="w-full py-3.5 rounded-2xl font-black text-white text-base"
+              style="background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 4px 18px rgba(124,58,237,0.30)">
+        Pelaa uudelleen
+      </button>
+      <button onclick="goTopics()" class="w-full py-3.5 rounded-2xl font-black text-base"
+              style="background:rgba(124,58,237,0.10);color:#7c3aed">
+        Vaihda aihe
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── KYSYMYSPANKKI ──────────────────────────────────────────────────────────────
+const TOPICS = [
+  {
+    id: 'yleistieto',
+    name: 'Yleistieto',
+    emoji: '🌍',
+    color: ['rgba(37,99,235,0.12)', 'rgba(37,99,235,0.22)', '#1d4ed8'],
+    questions: [
+      { q: 'Kuinka monta maata on Euroopan unionissa (2024)?', a: 0, opts: ['27', '25', '30', '32'] },
+      { q: 'Mikä on maailman pisin joki?', a: 1, opts: ['Amazoni', 'Niili', 'Jangtsejoki', 'Mississippi'] },
+      { q: 'Kuinka monta väriä on sateenkaaressa?', a: 2, opts: ['5', '6', '7', '8'] },
+      { q: 'Mikä on maailman korkein vuori?', a: 0, opts: ['Mount Everest', 'K2', 'Kangchenjunga', 'Makalu'] },
+      { q: 'Kuinka monta planeettaa aurinkokunmassamme on?', a: 1, opts: ['7', '8', '9', '10'] },
+      { q: 'Mikä on vesimolekyylin kemiallinen kaava?', a: 2, opts: ['HO', 'H₃O', 'H₂O', 'OH₂'] },
+      { q: 'Montako tuntia on vuorokaudessa?', a: 0, opts: ['24', '22', '26', '20'] },
+      { q: 'Montako siipeä mehiläisellä on?', a: 3, opts: ['2', '6', '8', '4'] },
+      { q: 'Mikä on maailman väkirikkain maa (2024)?', a: 1, opts: ['Kiina', 'Intia', 'USA', 'Indonesia'] },
+      { q: 'Kuinka monta kuukautta on vuodessa?', a: 2, opts: ['10', '11', '12', '13'] },
+    ]
+  },
+  {
+    id: 'historia',
+    name: 'Historia',
+    emoji: '🏛️',
+    color: ['rgba(180,83,9,0.12)', 'rgba(180,83,9,0.22)', '#92400e'],
+    questions: [
+      { q: 'Minä vuonna ensimmäinen maailmansota alkoi?', a: 1, opts: ['1912', '1914', '1916', '1918'] },
+      { q: 'Kuka maalasi Mona Lisan?', a: 0, opts: ['Leonardo da Vinci', 'Michelangelo', 'Rafael', 'Botticelli'] },
+      { q: 'Milloin Suomi itsenäistyi?', a: 2, opts: ['1915', '1916', '1917', '1918'] },
+      { q: 'Missä kaupungissa Titanic rakennettiin?', a: 3, opts: ['Lontoossa', 'Liverpoolissa', 'Glasgowssa', 'Belfastissa'] },
+      { q: 'Millä vuosikymmenellä ensimmäinen ihminen käveli Kuulla?', a: 1, opts: ['1950-luvulla', '1960-luvulla', '1970-luvulla', '1980-luvulla'] },
+      { q: 'Mikä valtio lähetti ensimmäisenä ihmisen avaruuteen?', a: 0, opts: ['Neuvostoliitto', 'USA', 'Kiina', 'Ranska'] },
+      { q: 'Kuka oli Suomen ensimmäinen presidentti?', a: 2, opts: ['Lauri Kr. Relander', 'P.E. Svinhufvud', 'K.J. Ståhlberg', 'Juho Kusti Paasikivi'] },
+      { q: 'Milloin Berliinin muuri kaatui?', a: 1, opts: ['1988', '1989', '1990', '1991'] },
+      { q: 'Missä vuodessa toinen maailmansota päättyi?', a: 2, opts: ['1943', '1944', '1945', '1946'] },
+      { q: 'Kuka oli Napoleonin viimeinen tappio -taistelun nimi?', a: 0, opts: ['Waterloo', 'Austerlitz', 'Leipzig', 'Moskova'] },
+    ]
+  },
+  {
+    id: 'tiede',
+    name: 'Tiede & Luonto',
+    emoji: '🔬',
+    color: ['rgba(13,148,136,0.12)', 'rgba(13,148,136,0.22)', '#0f766e'],
+    questions: [
+      { q: 'Mikä on valon nopeus tyhjiössä (pyöristettynä)?', a: 3, opts: ['100 000 km/s', '150 000 km/s', '250 000 km/s', '300 000 km/s'] },
+      { q: 'Mistä alkuaineesta timantit koostuvat?', a: 1, opts: ['Piiasta', 'Hiilestä', 'Rikistä', 'Alumiinista'] },
+      { q: 'Montako luuta on aikuisen ihmisen kehossa?', a: 2, opts: ['186', '196', '206', '216'] },
+      { q: 'Mikä on maailman suurin nisäkäs?', a: 0, opts: ['Sinivalas', 'Elefantti', 'Virtahepo', 'Norsu'] },
+      { q: 'Mikä planeetta on aurinkokunnan suurin?', a: 1, opts: ['Saturnus', 'Jupiter', 'Uranus', 'Neptunus'] },
+      { q: 'Mitä fotosynteesissä syntyy?', a: 2, opts: ['Hiilidioksidia', 'Typpeä', 'Happea ja sokeria', 'Vettä'] },
+      { q: 'Kuinka monta kromosomia on terveellä ihmisellä?', a: 3, opts: ['23', '32', '44', '46'] },
+      { q: 'Mikä alkuaine merkitään Au?', a: 0, opts: ['Kulta', 'Hopea', 'Kupari', 'Rauta'] },
+      { q: 'Kuinka monta alkuainetta on jaksollisessa järjestelmässä?', a: 2, opts: ['108', '112', '118', '124'] },
+      { q: 'Mitä happi tarkoittaa kemian merkinnässä O₂?', a: 1, opts: ['Yksi happiatomi', 'Kaksi happiatomia', 'Happiioni', 'Happioksidi'] },
+    ]
+  },
+  {
+    id: 'urheilu',
+    name: 'Urheilu',
+    emoji: '⚽',
+    color: ['rgba(22,163,74,0.12)', 'rgba(22,163,74,0.22)', '#166534'],
+    questions: [
+      { q: 'Montako pelaajaa on jalkapallojoukkueessa kentällä?', a: 2, opts: ['9', '10', '11', '12'] },
+      { q: 'Missä maassa jalkapallon MM-kisat järjestettiin 2022?', a: 0, opts: ['Qatarissa', 'Brasiliassa', 'Venäjällä', 'Saksassa'] },
+      { q: 'Mitä urheilulajia Mika Häkkinen edusti?', a: 1, opts: ['Rallya', 'Formula 1:tä', 'Moottoripyöräilyä', 'Karting-ajoa'] },
+      { q: 'Montako pelaajaa on jääkiekkojoukkueessa kentällä kerralla?', a: 3, opts: ['4', '5', '7', '6'] },
+      { q: 'Mikä on yleisurheilun lyhyin juoksumatka olympialaisissa?', a: 2, opts: ['50 m', '60 m', '100 m', '200 m'] },
+      { q: 'Missä kaupungissa järjestettiin 1952 kesäolympialaiset?', a: 0, opts: ['Helsingissä', 'Tukholmassa', 'Oslossa', 'Kööpenhaminassa'] },
+      { q: 'Mitä urheilulajia Toni Nieminen edusti?', a: 1, opts: ['Hiihto', 'Mäkihyppy', 'Ampumahiihto', 'Yhdistetty'] },
+      { q: 'Kuinka monta pelaajaa on koripallojoukkueessa kentällä?', a: 2, opts: ['4', '6', '5', '7'] },
+      { q: 'Missä vuodessa Suomi voitti jääkiekon MM-kultaa ensimmäistä kertaa?', a: 1, opts: ['1993', '1995', '1998', '2001'] },
+      { q: 'Millä urheilijalla on eniten Grand Slam -voittoja tennishistoriassa (2024)?', a: 0, opts: ['Novak Djokovic', 'Rafael Nadal', 'Roger Federer', 'Andy Murray'] },
+    ]
+  },
+  {
+    id: 'maantieto',
+    name: 'Maantieto',
+    emoji: '🗺️',
+    color: ['rgba(234,88,12,0.12)', 'rgba(234,88,12,0.22)', '#9a3412'],
+    questions: [
+      { q: 'Mikä on Suomen pääkaupunki?', a: 0, opts: ['Helsinki', 'Turku', 'Tampere', 'Espoo'] },
+      { q: 'Mikä on Euroopan suurin maa pinta-alaltaan?', a: 1, opts: ['Ukraina', 'Venäjä', 'Ranska', 'Ruotsi'] },
+      { q: 'Millä mantereella Brasilia sijaitsee?', a: 2, opts: ['Pohjois-Amerikassa', 'Afrikassa', 'Etelä-Amerikassa', 'Aasiassa'] },
+      { q: 'Mikä on maailman pienin valtio?', a: 0, opts: ['Vatikaani', 'Monaco', 'San Marino', 'Liechtenstein'] },
+      { q: 'Kuinka monta mannerta maailmassa on?', a: 3, opts: ['5', '4', '6', '7'] },
+      { q: 'Mikä on Afrikan korkein vuori?', a: 1, opts: ['Mount Kenya', 'Kilimanjaro', 'Atlas', 'Rwenzori'] },
+      { q: 'Missä maassa Tokyo sijaitsee?', a: 2, opts: ['Kiinassa', 'Koreassa', 'Japanissa', 'Taiwanissa'] },
+      { q: 'Mikä on maailman suurin valtameri?', a: 0, opts: ['Tyyni valtameri', 'Atlantti', 'Intian valtameri', 'Arktinen'] },
+      { q: 'Mikä on Suomen pisin joki?', a: 1, opts: ['Oulujoki', 'Kemijoki', 'Kokemäenjoki', 'Iijoki'] },
+      { q: 'Missä maassa sijaitsee Taj Mahal?', a: 2, opts: ['Pakistanissa', 'Bangladeshissa', 'Intiassa', 'Sri Lankassa'] },
+    ]
+  },
+  {
+    id: 'viihde',
+    name: 'Elokuvat & Musiikki',
+    emoji: '🎬',
+    color: ['rgba(219,39,119,0.12)', 'rgba(219,39,119,0.22)', '#9d174d'],
+    questions: [
+      { q: 'Kuka esitti "Bohemian Rhapsody" -kappaleen?', a: 0, opts: ['Queen', 'The Beatles', 'Led Zeppelin', 'Rolling Stones'] },
+      { q: 'Kuka ohjasi "Titanic" (1997) -elokuvan?', a: 1, opts: ['Steven Spielberg', 'James Cameron', 'Ridley Scott', 'Christopher Nolan'] },
+      { q: 'Mikä bändi esitti "Smells Like Teen Spirit"?', a: 2, opts: ['Pearl Jam', 'Soundgarden', 'Nirvana', 'Alice in Chains'] },
+      { q: 'Kuka näytteli Iron Mania Marvel-elokuvissa?', a: 0, opts: ['Robert Downey Jr.', 'Chris Evans', 'Chris Hemsworth', 'Mark Ruffalo'] },
+      { q: 'Mikä on maailman myydyin albumi kautta aikojen?', a: 1, opts: ['Back in Black', 'Thriller', 'Dark Side of the Moon', 'Hotel California'] },
+      { q: 'Kuka sävelsi "Finlandia"-teoksen?', a: 2, opts: ['Armas Järnefelt', 'Oskar Merikanto', 'Jean Sibelius', 'Toivo Kuula'] },
+      { q: 'Missä vuodessa "Star Wars" (Episodi IV) ensi-ilta oli?', a: 0, opts: ['1977', '1979', '1975', '1980'] },
+      { q: 'Mikä suomalainen yhtye tunnetaan kappaleesta "Wish I Had an Angel"?', a: 1, opts: ['HIM', 'Nightwish', 'Apocalyptica', 'Children of Bodom'] },
+      { q: 'Kuinka monta Oscar-palkintoa "Taru sormusten herrasta: Kuninkaan paluu" voitti?', a: 3, opts: ['9', '10', '10', '11'] },
+      { q: 'Mikä on Disney-elokuvien klassikko vuodelta 1994?', a: 2, opts: ['Aladdin', 'Kaunotar ja hirviö', 'Leijonakuningas', 'Pocahontas'] },
+    ]
+  },
+];
+
+// ── TILA ──────────────────────────────────────────────────────────────────────
+let currentTopic = null;
+let questions    = [];
+let qIndex       = 0;
+let score        = 0;
+let answered     = false;
+
+// ── ALUSTUS ───────────────────────────────────────────────────────────────────
+function init() {
+  const list = document.getElementById('topic-list');
+  TOPICS.forEach(t => {
+    const [bg, border, accent] = t.color;
+    const btn = document.createElement('button');
+    btn.className = 'btn-topic w-full rounded-3xl px-5 py-4 text-left';
+    btn.style.cssText = `background:linear-gradient(135deg,${bg},rgba(255,255,255,0.95));border:1.5px solid ${border};box-shadow:0 6px 24px rgba(0,0,0,0.09),inset 0 1px 0 rgba(255,255,255,0.90)`;
+    btn.innerHTML = `
+      <div class="flex items-center gap-4">
+        <div class="text-4xl">${t.emoji}</div>
+        <div>
+          <div class="font-black text-gray-900 text-lg">${t.name}</div>
+          <div class="text-sm font-semibold" style="color:${accent}">${t.questions.length} kysymystä</div>
+        </div>
+        <div class="ml-auto text-gray-300 text-xl">›</div>
+      </div>`;
+    btn.onclick = () => startQuiz(t.id);
+    list.appendChild(btn);
+  });
+}
+
+// ── VISALOGIIIKKA ─────────────────────────────────────────────────────────────
+function startQuiz(topicId) {
+  currentTopic = TOPICS.find(t => t.id === topicId);
+  questions    = shuffle([...currentTopic.questions]).slice(0, 10);
+  qIndex       = 0;
+  score        = 0;
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = questions[qIndex];
+  document.getElementById('q-label').textContent = `Kysymys ${qIndex + 1} / ${questions.length}`;
+  document.getElementById('score-label').textContent = `${score} ✓`;
+  document.getElementById('progress-bar').style.width = `${(qIndex / questions.length) * 100}%`;
+  document.getElementById('q-category').textContent = currentTopic.emoji + '  ' + currentTopic.name;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('btn-next').classList.add('hidden');
+  document.getElementById('btn-finish').classList.add('hidden');
+
+  const container = document.getElementById('answers');
+  container.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-answer w-full text-left rounded-2xl px-4 py-3.5 font-bold text-gray-800';
+    btn.style.cssText = 'background:rgba(255,255,255,0.92);border:1.5px solid rgba(0,0,0,0.10);box-shadow:0 2px 8px rgba(0,0,0,0.07)';
+    btn.innerHTML = `<span class="font-black text-gray-400 mr-2">${String.fromCharCode(65+i)}.</span>${opt}`;
+    btn.onclick = () => selectAnswer(i, btn);
+    container.appendChild(btn);
+  });
+}
+
+function selectAnswer(index, btn) {
+  if (answered) return;
+  answered = true;
+  const q = questions[qIndex];
+
+  // Merkitään oikea & väärä
+  const btns = document.getElementById('answers').querySelectorAll('button');
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.a) {
+      b.classList.add('correct');
+    } else if (i === index && index !== q.a) {
+      b.classList.add('wrong');
+    } else {
+      b.classList.add('reveal');
+    }
+  });
+
+  if (index === q.a) score++;
+
+  // Seuraava tai tulokset
+  if (qIndex < questions.length - 1) {
+    document.getElementById('btn-next').classList.remove('hidden');
+  } else {
+    document.getElementById('btn-finish').classList.remove('hidden');
+  }
+}
+
+function nextQuestion() {
+  qIndex++;
+  renderQuestion();
+}
+
+function showResults() {
+  document.getElementById('progress-bar').style.width = '100%';
+  showScreen('results');
+
+  document.getElementById('score-big').textContent = `${score} / 10`;
+  document.getElementById('result-topic').textContent = currentTopic.emoji + '  ' + currentTopic.name;
+
+  let emoji, msg;
+  if (score === 10)       { emoji = '🏆'; msg = 'Täydellinen tulos! Olet tietomestari!'; }
+  else if (score >= 8)    { emoji = '🌟'; msg = 'Loistava suoritus!'; }
+  else if (score >= 6)    { emoji = '👍'; msg = 'Hyvä tulos, jatka harjoittelua!'; }
+  else if (score >= 4)    { emoji = '📚'; msg = 'Ei hullumpi — pari toistoa lisää!'; }
+  else                    { emoji = '💪'; msg = 'Älä lannistu, yritä uudelleen!'; }
+
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-msg').textContent = msg;
+}
+
+function retryQuiz()  { startQuiz(currentTopic.id); }
+function goTopics()   { showScreen('topics'); }
+
+function showScreen(name) {
+  ['topics','quiz','results'].forEach(s => {
+    document.getElementById(`screen-${s}`).classList.toggle('hidden', s !== name);
+  });
+  if (name === 'results') {
+    document.getElementById('screen-results').classList.add('pop-in');
+  }
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+init();
+</script>
+</body>
+</html>

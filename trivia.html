@@ -126,6 +126,53 @@
 
 <script src="questions-aikuiset.js"></script>
 <script>
+// ── KYSYMYSPISTEEN YHDISTÄMINEN (trivia.json / tasainen JSON-array) ───────────
+/** Jakaa trivia.json -tyyliset kysymykset (id ad-hi-NNN) olemassa oleviin aiheisiin + Teknologia & Pelit. */
+function mergeFlatTriviaQuestions(flat) {
+  if (!Array.isArray(flat) || !flat.length) return;
+  const byTopic = {};
+  for (const q of flat) {
+    if (!q || typeof q.id !== 'string' || !Array.isArray(q.opts)) continue;
+    const m = /^ad-hi-(\d+)$/.exec(q.id);
+    if (!m) continue;
+    const n = parseInt(m[1], 10);
+    let topicId;
+    if (n >= 11 && n <= 40) topicId = 'yleistieto';
+    else if (n >= 41 && n <= 70) topicId = 'tiede';
+    else if (n >= 71 && n <= 100) topicId = 'viihde';
+    else if (n >= 101 && n <= 130) topicId = 'urheilu';
+    else if (n >= 131 && n <= 160) topicId = 'maantieto';
+    else if (n >= 161 && n <= 190) topicId = 'teknologia';
+    else continue;
+    if (!byTopic[topicId]) byTopic[topicId] = [];
+    byTopic[topicId].push(q);
+  }
+  for (const tid of Object.keys(byTopic)) {
+    if (tid === 'teknologia') continue;
+    const t = TOPICS.find(x => x.id === tid);
+    if (!t) continue;
+    const existing = new Set(t.questions.map(x => x.id));
+    for (const q of byTopic[tid]) {
+      if (!existing.has(q.id)) {
+        t.questions.push(q);
+        existing.add(q.id);
+      }
+    }
+  }
+  if (byTopic.teknologia && byTopic.teknologia.length) {
+    const tech = {
+      id: 'teknologia',
+      name: 'Teknologia & Pelit',
+      emoji: '💻',
+      color: ['rgba(59,130,246,0.12)', 'rgba(59,130,246,0.22)', '#2563eb'],
+      questions: [...byTopic.teknologia],
+    };
+    const idx = TOPICS.findIndex(x => x.id === 'teknologia');
+    if (idx >= 0) TOPICS[idx] = tech;
+    else TOPICS.push(tech);
+  }
+}
+
 // ── TILA ──────────────────────────────────────────────────────────────────────
 let currentTopic = null;
 let questions    = [];
@@ -288,20 +335,42 @@ document.getElementById('json-input').addEventListener('change', function(e) {
   reader.onload = function(ev) {
     try {
       const data = JSON.parse(ev.target.result);
-      const topics = Array.isArray(data) ? data : data.topics || data.TOPICS;
-      if (!Array.isArray(topics) || !topics.length || !topics[0].questions) {
-        throw new Error('Väärä rakenne');
+      let topicCount = 0;
+      let flatMerged = false;
+      if (Array.isArray(data) && data.length && data[0] && data[0].q && Array.isArray(data[0].opts) && data[0].id && !data[0].questions) {
+        mergeFlatTriviaQuestions(data);
+        flatMerged = true;
+        topicCount = new Set(
+          data.map(q => {
+            const m = /^ad-hi-(\d+)$/.exec(q.id || '');
+            if (!m) return null;
+            const n = parseInt(m[1], 10);
+            if (n >= 11 && n <= 40) return 'yleistieto';
+            if (n >= 41 && n <= 70) return 'tiede';
+            if (n >= 71 && n <= 100) return 'viihde';
+            if (n >= 101 && n <= 130) return 'urheilu';
+            if (n >= 131 && n <= 160) return 'maantieto';
+            if (n >= 161 && n <= 190) return 'teknologia';
+            return null;
+          }).filter(Boolean)
+        ).size;
+      } else {
+        const topics = Array.isArray(data) ? data : data.topics || data.TOPICS;
+        if (!Array.isArray(topics) || !topics.length || !topics[0].questions) {
+          throw new Error('Väärä rakenne');
+        }
+        topicCount = topics.length;
+        topics.forEach(t => {
+          const idx = TOPICS.findIndex(x => x.id === t.id);
+          if (idx >= 0) TOPICS[idx] = t; else TOPICS.push(t);
+        });
       }
-      // Lisätään ladatut aiheet TOPICS-listaan (tai korvataan jos sama id)
-      topics.forEach(t => {
-        const idx = TOPICS.findIndex(x => x.id === t.id);
-        if (idx >= 0) TOPICS[idx] = t; else TOPICS.push(t);
-      });
-      // Päivitetään aihelista
       document.getElementById('topic-list').innerHTML = '';
       init();
       const status = document.getElementById('json-status');
-      status.textContent = `Ladattu: ${topics.length} aihetta tiedostosta "${file.name}"`;
+      status.textContent = flatMerged
+        ? `Ladattu: kysymyspankki → ${topicCount} aihetta ("${file.name}")`
+        : `Ladattu: ${topicCount} aihetta tiedostosta "${file.name}"`;
       status.className = 'text-center text-xs font-semibold mt-2 text-green-600';
       status.classList.remove('hidden');
     } catch (err) {
@@ -315,7 +384,17 @@ document.getElementById('json-input').addEventListener('change', function(e) {
   reader.readAsText(file);
 });
 
-init();
+async function boot() {
+  try {
+    const res = await fetch('trivia.json');
+    if (res.ok) {
+      const flat = await res.json();
+      mergeFlatTriviaQuestions(flat);
+    }
+  } catch (_) { /* offline / file:// — peruspankki questions-aikuiset.js */ }
+  init();
+}
+boot();
 
 // ── SERVICE WORKER ────────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {

@@ -107,117 +107,8 @@
 
 </div>
 
+<script src="questions-nuoret.js"></script>
 <script>
-const TOPICS = [
-  {
-    id: 'yleistieto',
-    name: 'Yleistieto',
-    emoji: '🌍',
-    color: ['rgba(37,99,235,0.12)', 'rgba(37,99,235,0.22)', '#1d4ed8'],
-    questions: [
-      { q: 'Kuinka monta planeettaa aurinkokunmassamme on?', a: 2, opts: ['6', '7', '8', '9'] },
-      { q: 'Kuinka monta väriä sateenkaaressa on?', a: 2, opts: ['5', '6', '7', '8'] },
-      { q: 'Mikä on maailman korkein rakennus?', a: 2, opts: ['Eiffel-torni', 'Empire State', 'Burj Khalifa', 'Tokyo Skytree'] },
-      { q: 'Mikä eläin on maailman nopein maaeläin?', a: 1, opts: ['Leijona', 'Gepardi', 'Strutsi', 'Villihevonen'] },
-      { q: 'Mikä on maailman pisin joki?', a: 1, opts: ['Amazoni', 'Niili', 'Jangtsejoki', 'Mississippi'] },
-      { q: 'Mikä on maailman suurin valtameri?', a: 3, opts: ['Atlantti', 'Arktinen', 'Intian valtameri', 'Tyyni valtameri'] },
-      { q: 'Montako tuntia on vuorokaudessa?', a: 1, opts: ['22', '24', '25', '26'] },
-      { q: 'Kuinka monta päivää on karkausvuodessa?', a: 2, opts: ['364', '365', '366', '367'] },
-      { q: 'Mikä on maailman äidinkieliltään eniten puhuttu kieli?', a: 2, opts: ['Englanti', 'Espanja', 'Mandariinikiina', 'Hindi'] },
-      { q: 'Montako kuukautta on vuodessa?', a: 2, opts: ['10', '11', '12', '13'] },
-    ]
-  },
-  {
-    id: 'elaimet',
-    name: 'Eläimet & Luonto',
-    emoji: '🐾',
-    color: ['rgba(13,148,136,0.12)', 'rgba(13,148,136,0.22)', '#0f766e'],
-    questions: [
-      { q: 'Montako jalkaa hämähäkillä on?', a: 2, opts: ['4', '6', '8', '10'] },
-      { q: 'Mikä on maailman suurin eläin?', a: 1, opts: ['Elefantti', 'Sinivalas', 'Hailevähai', 'Jättiläismanta'] },
-      { q: 'Missä maassa jättiläispanda elää luonnossa?', a: 2, opts: ['Japanissa', 'Australiassa', 'Kiinassa', 'Intiassa'] },
-      { q: 'Montako siipeä perhosella on?', a: 1, opts: ['2', '4', '6', '8'] },
-      { q: 'Mikä eläin rakentaa patoja ja asuu niiden takana?', a: 0, opts: ['Majava', 'Saukko', 'Näätä', 'Mäyrä'] },
-      { q: 'Mikä lintu ei osaa lentää?', a: 1, opts: ['Kotka', 'Strutsi', 'Pelikaani', 'Papukaija'] },
-      { q: 'Mitä eläimiä kutsutaan sammakkoeläimiksi?', a: 2, opts: ['Krokotiili ja kilpikonna', 'Käärme ja liskoihin', 'Sammakko ja salamanteri', 'Merimies ja ankka'] },
-      { q: 'Kuinka kauan elefantti kantaa poikastaan ennen synnytystä?', a: 3, opts: ['6 kuukautta', '12 kuukautta', '18 kuukautta', '22 kuukautta'] },
-      { q: 'Mikä on maailman suurin lintu?', a: 0, opts: ['Strutsi', 'Kotka', 'Pelikaani', 'Emu'] },
-      { q: 'Millä eläimellä on pisin kaula?', a: 1, opts: ['Kameli', 'Kirahvi', 'Flamingo', 'Strutsi'] },
-    ]
-  },
-  {
-    id: 'elokuvat',
-    name: 'Elokuvat & Sarjat',
-    emoji: '🎬',
-    color: ['rgba(219,39,119,0.12)', 'rgba(219,39,119,0.22)', '#9d174d'],
-    questions: [
-      { q: 'Mikä on Harry Potterin taikakoulun nimi suomeksi?', a: 1, opts: ['Dumbledore', 'Tylypahka', 'Diagon', 'Azkaban'] },
-      { q: 'Kenellä on jäätymisvoima Disneyn Frozen-elokuvassa?', a: 1, opts: ['Annalla', 'Elsalla', 'Kristoffilla', 'Olafilla'] },
-      { q: 'Mistä elokuvasta on leijonapoika Simba?', a: 2, opts: ['Tarzan', 'Dumbo', 'Leijonakuningas', 'Bambi'] },
-      { q: 'Mikä on Minecraft-pelin hiljaa hiipivä räjähtävä vihollinen?', a: 2, opts: ['Zombie', 'Skeleton', 'Creeper', 'Enderman'] },
-      { q: 'Millä supersankarilla on hämähäkin voimia?', a: 2, opts: ['Batman', 'Superman', 'Hämähäkkimies', 'Hulk'] },
-      { q: 'Mikä Disney-elokuva kertoo kalasta jonka poika katoaa?', a: 2, opts: ['Shark Tale', 'Atlantis', 'Etsitään Nemoa', 'Luca'] },
-      { q: 'Mikä on Pixarin Toy Storyn tärkein päähenkilö?', a: 1, opts: ['Buzz Lightyear', 'Woody', 'Rex', 'Hamm'] },
-      { q: 'Missä maassa tapahtuu Disneyn Mulan-elokuva?', a: 2, opts: ['Japanissa', 'Koreassa', 'Kiinassa', 'Thaimaassa'] },
-      { q: 'Kuka sanoo "Hakuna Matata" Leijonakuninkaassa?', a: 1, opts: ['Simba', 'Timon ja Pumba', 'Rafiki', 'Mufasa'] },
-      { q: 'Mikä on Fortnite-pelissä tavoitteena?', a: 2, opts: ['Kerätä eniten kultaa', 'Rakentaa suurin linna', 'Olla viimeinen selviytyjä', 'Voittaa kilpa-ajo'] },
-    ]
-  },
-  {
-    id: 'urheilu',
-    name: 'Urheilu',
-    emoji: '⚽',
-    color: ['rgba(22,163,74,0.12)', 'rgba(22,163,74,0.22)', '#166534'],
-    questions: [
-      { q: 'Montako pelaajaa on jalkapallojoukkueessa kentällä?', a: 2, opts: ['9', '10', '11', '12'] },
-      { q: 'Montako pelaajaa on koripallojoukkueessa kentällä?', a: 1, opts: ['4', '5', '6', '7'] },
-      { q: 'Montako pelaajaa on lentopallon joukkueessa kentällä?', a: 1, opts: ['5', '6', '7', '8'] },
-      { q: 'Millä englanninkielisellä nimellä tunnetaan sulkapallo?', a: 1, opts: ['Squash', 'Badminton', 'Tennis', 'Pickleball'] },
-      { q: 'Missä lajissa pelataan kiekolla jäällä?', a: 1, opts: ['Jalkapallossa', 'Jääkiekossa', 'Sulkapallossa', 'Golfissa'] },
-      { q: 'Mikä on yleisurheilun lyhyin olympialaisten juoksumatka?', a: 1, opts: ['60 m', '100 m', '200 m', '400 m'] },
-      { q: 'Missä kaupungissa järjestettiin 2024 kesäolympialaiset?', a: 2, opts: ['Lontoossa', 'Tokiossa', 'Pariisissa', 'Los Angelesissa'] },
-      { q: 'Montako erää on täyspitkässä jääkiekko-ottelussa?', a: 1, opts: ['2', '3', '4', '5'] },
-      { q: 'Mikä maa voitti jalkapallon MM-kultaa 2018?', a: 2, opts: ['Brasilia', 'Kroatia', 'Ranska', 'Belgia'] },
-      { q: 'Montako pistettä saa tennisessä palvelun suoraan voittamisesta (ässä)?', a: 0, opts: ['1 piste', 'Ei erityispisteitä', '2 pistettä', '3 pistettä'] },
-    ]
-  },
-  {
-    id: 'maantieto',
-    name: 'Maantieto',
-    emoji: '🗺️',
-    color: ['rgba(234,88,12,0.12)', 'rgba(234,88,12,0.22)', '#9a3412'],
-    questions: [
-      { q: 'Mikä on Suomen pääkaupunki?', a: 2, opts: ['Turku', 'Tampere', 'Helsinki', 'Oulu'] },
-      { q: 'Millä mantereella Egypti sijaitsee?', a: 2, opts: ['Euroopassa', 'Aasiassa', 'Afrikassa', 'Australiassa'] },
-      { q: 'Missä maassa Eiffel-torni sijaitsee?', a: 3, opts: ['Italiassa', 'Espanjassa', 'Saksassa', 'Ranskassa'] },
-      { q: 'Mikä on maailman pienin valtio?', a: 1, opts: ['Monaco', 'Vatikaani', 'San Marino', 'Liechtenstein'] },
-      { q: 'Mikä on Suomen naapurimaa idässä?', a: 3, opts: ['Ruotsi', 'Norja', 'Viro', 'Venäjä'] },
-      { q: 'Kuinka monta mannerta maailmassa on?', a: 2, opts: ['5', '6', '7', '8'] },
-      { q: 'Missä maassa sijaitsee Colosseum?', a: 3, opts: ['Kreikassa', 'Ranskassa', 'Espanjassa', 'Italiassa'] },
-      { q: 'Mikä valtameri on Euroopan ja Amerikan välissä?', a: 2, opts: ['Tyyni valtameri', 'Intian valtameri', 'Atlantin valtameri', 'Arktinen'] },
-      { q: 'Missä maassa sijaitsee Fuji-vuori?', a: 2, opts: ['Kiinassa', 'Koreassa', 'Japanissa', 'Taiwanissa'] },
-      { q: 'Mikä on Pohjoismaiden suurin maa pinta-alaltaan?', a: 2, opts: ['Suomi', 'Norja', 'Ruotsi', 'Tanska'] },
-    ]
-  },
-  {
-    id: 'pelit',
-    name: 'Pelit & Teknologia',
-    emoji: '🎮',
-    color: ['rgba(79,70,229,0.12)', 'rgba(79,70,229,0.22)', '#4338ca'],
-    questions: [
-      { q: 'Mikä suomalainen yritys kehitti Angry Birds -pelin?', a: 2, opts: ['Nokia', 'Supercell', 'Rovio', 'Remedy'] },
-      { q: 'Mikä suomalainen yritys kehitti Clash of Clans -pelin?', a: 1, opts: ['Rovio', 'Supercell', 'Nokia', 'Next Games'] },
-      { q: 'Montako bittiä on yhdessä tavussa (byte)?', a: 1, opts: ['4', '8', '16', '32'] },
-      { q: 'Mitä lyhennettä käytetään tekstiviestistä?', a: 1, opts: ['MMS', 'SMS', 'GPS', 'USB'] },
-      { q: 'Mikä on Fortniten kehittäjäyritys?', a: 2, opts: ['Activision', 'EA', 'Epic Games', 'Ubisoft'] },
-      { q: 'Missä vuosikymmenellä internet tuli yleiseen käyttöön?', a: 2, opts: ['1970-luvulla', '1980-luvulla', '1990-luvulla', '2000-luvulla'] },
-      { q: 'Mikä on maailman myydyin videopelisarja kaikkien aikojen?', a: 2, opts: ['Call of Duty', 'FIFA', 'Mario', 'Pokémon'] },
-      { q: 'Missä vuodessa ensimmäinen iPhone julkaistiin?', a: 2, opts: ['2005', '2006', '2007', '2008'] },
-      { q: 'Mitä PDF lyhenne tarkoittaa englanniksi?', a: 1, opts: ['Personal Data File', 'Portable Document Format', 'Public Digital Format', 'Print Data File'] },
-      { q: 'Mikä on Roblox-pelissä virtuaalivaluutan nimi?', a: 1, opts: ['V-Bucks', 'Robux', 'Coins', 'Gems'] },
-    ]
-  },
-];
 
 // ── TILA ──────────────────────────────────────────────────────────────────────
 let currentTopic = null;
@@ -248,10 +139,30 @@ function init() {
   });
 }
 
+// ── KYSYMYSHISTORIA (localStorage) ───────────────────────────────────────────
+const SEEN_KEY = 'tietovisa_seen_nuoret';
+
+function getUnseen(topicId) {
+  const data = JSON.parse(localStorage.getItem(SEEN_KEY) || '{}');
+  const seen = new Set(data[topicId] || []);
+  const all  = TOPICS.find(t => t.id === topicId).questions;
+  const unseen = all.filter(q => !seen.has(q.id));
+  return unseen.length >= 10 ? unseen : all; // resetoi jos liian vähän jäljellä
+}
+
+function markSeen(topicId, shownQuestions) {
+  const data = JSON.parse(localStorage.getItem(SEEN_KEY) || '{}');
+  const seen = new Set(data[topicId] || []);
+  shownQuestions.forEach(q => seen.add(q.id));
+  const total = TOPICS.find(t => t.id === topicId).questions.length;
+  data[topicId] = seen.size >= total ? [] : [...seen]; // täysi kierto → reset
+  localStorage.setItem(SEEN_KEY, JSON.stringify(data));
+}
+
 // ── LOGIIKKA ──────────────────────────────────────────────────────────────────
 function startQuiz(topicId) {
   currentTopic = TOPICS.find(t => t.id === topicId);
-  questions    = shuffle([...currentTopic.questions]).slice(0, 10);
+  questions    = shuffle(getUnseen(topicId)).slice(0, 10);
   qIndex       = 0;
   score        = 0;
   showScreen('quiz');
@@ -301,6 +212,7 @@ function nextQuestion() { qIndex++; renderQuestion(); }
 
 function showResults() {
   document.getElementById('progress-bar').style.width = '100%';
+  markSeen(currentTopic.id, questions);
   showScreen('results');
   document.getElementById('score-big').textContent = `${score} / 10`;
   document.getElementById('result-topic').textContent = currentTopic.emoji + '  ' + currentTopic.name;

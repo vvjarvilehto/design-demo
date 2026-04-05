@@ -1,10 +1,12 @@
-const CACHE = 'tietovisa-v1';
+const CACHE = 'tietovisa-v2';
 
 const PRECACHE = [
   './',
   'index.html',
   'trivia.html',
   'trivia-nuoret.html',
+  'questions-aikuiset.js',
+  'questions-nuoret.js',
   'manifest.json',
   'icon.svg',
   'sw.js',

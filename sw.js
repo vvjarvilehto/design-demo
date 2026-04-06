@@ -1,8 +1,9 @@
-const CACHE = 'tietovisa-v8';
+const CACHE = 'tietovisa-v9';
 
 const PRECACHE = [
   './',
   'index.html',
+  'countdown.html',
   'aurora.html',
   'trivia.html',
   'trivia.json',

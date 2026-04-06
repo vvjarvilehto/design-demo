@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paras countdown-äppi ikinä</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Nunito', sans-serif; }
+    #ring {
+      transform: rotate(-90deg);
+      transition: stroke-dashoffset 0.35s ease;
+    }
+    @keyframes pop-in {
+      from { opacity: 0; transform: scale(0.85); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .celebrate-box {
+      animation: pop-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    #confetti-canvas {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 40;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#fff7ed] p-5 pb-10">
+
+  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+  <div class="max-w-md mx-auto relative z-10">
+    <a href="index.html" class="inline-flex items-center gap-1 text-sm font-semibold text-orange-400 hover:text-orange-600 mb-3 transition-colors">
+      ‹ Etusivulle
+    </a>
+
+    <header class="text-center mb-6">
+      <h1 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">Paras countdown-äppi ikinä</h1>
+      <p class="text-gray-500 font-semibold text-sm mt-1">Aseta aika, aloita — lopussa juhla</p>
+    </header>
+
+    <!-- Esiasetukset -->
+    <div class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pikavalinnat</div>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" data-preset="60" class="preset px-3 py-2 rounded-2xl text-sm font-bold bg-orange-50 text-orange-800 border border-orange-200 active:scale-95 transition-transform">1 min</button>
+        <button type="button" data-preset="300" class="preset px-3 py-2 rounded-2xl text-sm font-bold bg-orange-50 text-orange-800 border border-orange-200 active:scale-95 transition-transform">5 min</button>
+        <button type="button" data-preset="600" class="preset px-3 py-2 rounded-2xl text-sm font-bold bg-orange-50 text-orange-800 border border-orange-200 active:scale-95 transition-transform">10 min</button>
+        <button type="button" data-preset="900" class="preset px-3 py-2 rounded-2xl text-sm font-bold bg-orange-50 text-orange-800 border border-orange-200 active:scale-95 transition-transform">15 min</button>
+        <button type="button" data-preset="1500" class="preset px-3 py-2 rounded-2xl text-sm font-bold bg-orange-50 text-orange-800 border border-orange-200 active:scale-95 transition-transform">25 min</button>
+        <button type="button" data-preset="3600" class="preset px-3 py-2 rounded-2xl text-sm font-bold bg-orange-50 text-orange-800 border border-orange-200 active:scale-95 transition-transform">1 h</button>
+      </div>
+    </div>
+
+    <!-- Oma aika -->
+    <div class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Oma aika</div>
+      <div class="flex gap-3 justify-center items-end flex-wrap">
+        <label class="text-center">
+          <span class="block text-xs font-bold text-gray-400 mb-1">T</span>
+          <input id="in-h" type="number" min="0" max="99" value="0" class="w-16 text-center text-xl font-black rounded-2xl border-2 border-orange-100 py-2 focus:border-orange-400 outline-none" />
+        </label>
+        <label class="text-center">
+          <span class="block text-xs font-bold text-gray-400 mb-1">Min</span>
+          <input id="in-m" type="number" min="0" max="59" value="5" class="w-16 text-center text-xl font-black rounded-2xl border-2 border-orange-100 py-2 focus:border-orange-400 outline-none" />
+        </label>
+        <label class="text-center">
+          <span class="block text-xs font-bold text-gray-400 mb-1">Sek</span>
+          <input id="in-s" type="number" min="0" max="59" value="0" class="w-16 text-center text-xl font-black rounded-2xl border-2 border-orange-100 py-2 focus:border-orange-400 outline-none" />
+        </label>
+      </div>
+    </div>
+
+    <!-- Aikakapseli -->
+    <div class="rounded-3xl p-4 mb-6 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-dashed border-amber-300 shadow-[0_4px_20px_rgba(251,191,36,0.15)]">
+      <div class="flex items-start gap-3">
+        <span class="text-3xl shrink-0" aria-hidden="true">📬</span>
+        <div class="min-w-0 flex-1">
+          <div class="font-black text-gray-900 text-sm">Aikakapseli (yllätys)</div>
+          <p class="text-xs text-gray-600 font-medium mt-1 leading-relaxed">
+            Kirjoita lyhyt viesti itsellesi — se lukitaan ja <strong>paljastuu juhlallisesti</strong>, kun ajastin päättyy. Voit jättää tyhjäksi.
+          </p>
+          <textarea id="capsule" maxlength="120" rows="2" placeholder="Esim. Hyvin tehty — nyt kahvitauko ☕"
+            class="mt-3 w-full rounded-2xl border-2 border-amber-200 bg-white/90 px-3 py-2 text-sm font-semibold text-gray-800 placeholder:text-gray-400 focus:border-amber-400 outline-none resize-none"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Näyttö + rengas -->
+    <div class="flex flex-col items-center mb-6">
+      <div class="relative w-64 h-64 sm:w-72 sm:h-72">
+        <svg class="w-full h-full drop-shadow-lg" viewBox="0 0 200 200" aria-hidden="true">
+          <circle cx="100" cy="100" r="88" fill="none" stroke="#fed7aa" stroke-width="10" />
+          <circle id="ring" cx="100" cy="100" r="88" fill="none" stroke="#ea580c" stroke-width="10"
+            stroke-linecap="round" stroke-dasharray="553" stroke-dashoffset="0" />
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
+          <div id="status" class="text-xs font-bold uppercase tracking-widest text-orange-500 mb-1">Valmis</div>
+          <div id="display" class="text-4xl sm:text-5xl font-black text-gray-900 tabular-nums tracking-tight">00:05:00</div>
+          <div id="sub" class="text-xs font-semibold text-gray-400 mt-2 max-w-[200px]"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ohjaus -->
+    <div class="flex flex-wrap gap-2 justify-center mb-4">
+      <button id="btn-start" type="button" class="px-6 py-3 rounded-full font-black text-white shadow-[0_4px_16px_rgba(234,88,12,0.35)] active:scale-95 transition-all bg-gradient-to-r from-orange-500 to-amber-500">
+        ▶ Aloita
+      </button>
+      <button id="btn-pause" type="button" disabled class="px-6 py-3 rounded-full font-black text-orange-800 bg-white border-2 border-orange-200 shadow-sm active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none">
+        ⏸ Tauko
+      </button>
+      <button id="btn-reset" type="button" class="px-6 py-3 rounded-full font-black text-gray-600 bg-gray-100 border border-gray-200 active:scale-95 transition-all">
+        ↺ Nollaa
+      </button>
+    </div>
+
+    <p class="text-center text-xs text-gray-400 font-medium">
+      Vinkki: salli ilmoitukset, niin saat muistutuksen myös toisella välilehdellä.
+    </p>
+  </div>
+
+  <!-- Loppujuhla-overlay -->
+  <div id="overlay" class="fixed inset-0 z-50 hidden items-center justify-center p-6 bg-black/40 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="celebrate-title">
+    <div class="celebrate-box max-w-sm w-full rounded-3xl bg-white p-8 text-center shadow-2xl border border-orange-100">
+      <div class="text-5xl mb-4" aria-hidden="true">🎉</div>
+      <h2 id="celebrate-title" class="text-2xl font-black text-gray-900">Aika täynnä!</h2>
+      <p id="celebrate-default" class="text-gray-600 font-semibold mt-2">Hienoa — saavutit mitän asettamasi.</p>
+      <div id="celebrate-capsule" class="hidden mt-5 p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
+        <div class="text-xs font-bold text-amber-700 uppercase tracking-wider mb-1">Aikakapselisi</div>
+        <p id="celebrate-text" class="text-lg font-bold text-gray-900 whitespace-pre-wrap break-words"></p>
+      </div>
+      <button type="button" id="btn-dismiss" class="mt-8 w-full py-3 rounded-2xl font-black text-white bg-orange-500 hover:bg-orange-600 transition-colors">
+        Selvä!
+      </button>
+    </div>
+  </div>
+
+<script>
+(function () {
+  const RING_LEN = 2 * Math.PI * 88;
+
+  const display = document.getElementById('display');
+  const sub = document.getElementById('sub');
+  const statusEl = document.getElementById('status');
+  const ring = document.getElementById('ring');
+  const btnStart = document.getElementById('btn-start');
+  const btnPause = document.getElementById('btn-pause');
+  const btnReset = document.getElementById('btn-reset');
+  const inH = document.getElementById('in-h');
+  const inM = document.getElementById('in-m');
+  const inS = document.getElementById('in-s');
+  const capsuleInput = document.getElementById('capsule');
+  const overlay = document.getElementById('overlay');
+  const celebrateDefault = document.getElementById('celebrate-default');
+  const celebrateCapsule = document.getElementById('celebrate-capsule');
+  const celebrateText = document.getElementById('celebrate-text');
+  const btnDismiss = document.getElementById('btn-dismiss');
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+
+  let totalMs = 0;
+  let remainingMs = 0;
+  let targetEnd = 0;
+  let raf = null;
+  let running = false;
+  let paused = false;
+  let lockedCapsule = '';
+
+  function pad(n) {
+    return String(Math.max(0, Math.floor(n))).padStart(2, '0');
+  }
+
+  function parseInputs() {
+    const h = Math.min(99, Math.max(0, parseInt(inH.value, 10) || 0));
+    const m = Math.min(59, Math.max(0, parseInt(inM.value, 10) || 0));
+    const s = Math.min(59, Math.max(0, parseInt(inS.value, 10) || 0));
+    inH.value = h;
+    inM.value = m;
+    inS.value = s;
+    return ((h * 3600) + (m * 60) + s) * 1000;
+  }
+
+  function formatMs(ms) {
+    const sec = Math.ceil(ms / 1000);
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    if (h > 0) return `${pad(h)}:${pad(m)}:${pad(s)}`;
+    return `${pad(m)}:${pad(s)}`;
+  }
+
+  function updateRing() {
+    if (totalMs <= 0) {
+      ring.style.strokeDasharray = String(RING_LEN);
+      ring.style.strokeDashoffset = String(RING_LEN);
+      return;
+    }
+    const p = remainingMs / totalMs;
+    ring.style.strokeDasharray = String(RING_LEN);
+    ring.style.strokeDashoffset = String(RING_LEN * (1 - p));
+  }
+
+  function refreshDisplay() {
+    display.textContent = formatMs(remainingMs);
+    updateRing();
+  }
+
+  function setStatus(text, subText) {
+    statusEl.textContent = text;
+    sub.textContent = subText || '';
+  }
+
+  function setInputsEnabled(on) {
+    inH.disabled = !on;
+    inM.disabled = !on;
+    inS.disabled = !on;
+    capsuleInput.readOnly = !on;
+    document.querySelectorAll('.preset').forEach(b => { b.disabled = !on; });
+  }
+
+  function stopLoop() {
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
+  }
+
+  function tick() {
+    if (!running || paused) return;
+    remainingMs = Math.max(0, targetEnd - Date.now());
+    refreshDisplay();
+    if (remainingMs <= 0) {
+      finish();
+      return;
+    }
+    raf = requestAnimationFrame(tick);
+  }
+
+  function playFanfare() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      const ac = new Ctx();
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((freq, i) => {
+        const o = ac.createOscillator();
+        const g = ac.createGain();
+        o.type = 'triangle';
+        o.frequency.value = freq;
+        g.gain.value = 0;
+        o.connect(g);
+        g.connect(ac.destination);
+        const t0 = ac.currentTime + i * 0.12;
+        o.start(t0);
+        g.gain.setValueAtTime(0, t0);
+        g.gain.linearRampToValueAtTime(0.12, t0 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.35);
+        o.stop(t0 + 0.4);
+      });
+    } catch (e) {}
+  }
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth * devicePixelRatio;
+    canvas.height = window.innerHeight * devicePixelRatio;
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  }
+
+  function confettiBurst() {
+    resizeCanvas();
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const colors = ['#ea580c', '#f59e0b', '#fbbf24', '#fb923c', '#fdba74', '#22c55e', '#3b82f6', '#a855f7'];
+    const pieces = 120;
+    const parts = [];
+    for (let i = 0; i < pieces; i++) {
+      parts.push({
+        x: w / 2 + (Math.random() - 0.5) * 80,
+        y: h * 0.35,
+        vx: (Math.random() - 0.5) * 14,
+        vy: -Math.random() * 12 - 4,
+        g: 0.35 + Math.random() * 0.2,
+        r: 4 + Math.random() * 6,
+        rot: Math.random() * Math.PI * 2,
+        vr: (Math.random() - 0.5) * 0.3,
+        c: colors[Math.floor(Math.random() * colors.length)]
+      });
+    }
+    let frame = 0;
+    function step() {
+      frame++;
+      ctx.clearRect(0, 0, w, h);
+      let alive = false;
+      parts.forEach(p => {
+        p.vy += p.g;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        if (p.y < h + 40) alive = true;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.c;
+        ctx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * 0.6);
+        ctx.restore();
+      });
+      if (alive && frame < 180) requestAnimationFrame(step);
+      else ctx.clearRect(0, 0, w, h);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function notifyDone() {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    try {
+      new Notification('Paras countdown-äppi ikinä', { body: 'Aika on täynnä — tarkista aikakapselisi!', icon: 'icon.svg' });
+    } catch (e) {}
+  }
+
+  function finish() {
+    running = false;
+    paused = false;
+    stopLoop();
+    remainingMs = 0;
+    refreshDisplay();
+    setStatus('Valmis', '');
+    btnStart.disabled = false;
+    btnStart.textContent = '▶ Aloita uudelleen';
+    btnPause.disabled = true;
+    setInputsEnabled(true);
+
+    playFanfare();
+    if (navigator.vibrate) navigator.vibrate([80, 50, 80, 50, 120]);
+    confettiBurst();
+    notifyDone();
+
+    const msg = lockedCapsule.trim();
+    celebrateDefault.classList.toggle('hidden', !!msg);
+    celebrateCapsule.classList.toggle('hidden', !msg);
+    celebrateText.textContent = msg || '';
+    overlay.classList.remove('hidden');
+    overlay.classList.add('flex');
+  }
+
+  function start() {
+    if (running && !paused) return;
+    if (paused) {
+      paused = false;
+      targetEnd = Date.now() + remainingMs;
+      setStatus('Käynnissä', lockedCapsule.trim() ? 'Aikakapseli lukittu' : 'Jäljellä');
+      btnStart.textContent = '▶ Käynnissä';
+      btnPause.disabled = false;
+      tick();
+      return;
+    }
+
+    totalMs = parseInputs();
+    if (totalMs <= 0) {
+      setStatus('Virhe', 'Aseta vähintään yksi sekunti');
+      return;
+    }
+
+    lockedCapsule = capsuleInput.value;
+    remainingMs = totalMs;
+    running = true;
+    paused = false;
+    targetEnd = Date.now() + totalMs;
+    setInputsEnabled(false);
+    setStatus('Käynnissä', lockedCapsule.trim() ? 'Aikakapseli lukittu' : 'Jäljellä');
+    btnStart.disabled = true;
+    btnStart.textContent = '▶ Käynnissä';
+    btnPause.disabled = false;
+    refreshDisplay();
+    tick();
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+  }
+
+  function pause() {
+    if (!running || paused) return;
+    paused = true;
+    stopLoop();
+    remainingMs = Math.max(0, targetEnd - Date.now());
+    refreshDisplay();
+    setStatus('Tauolla', 'Jatka kun olet valmis');
+    btnStart.disabled = false;
+    btnStart.textContent = '▶ Jatka';
+    btnPause.disabled = true;
+  }
+
+  function reset() {
+    stopLoop();
+    running = false;
+    paused = false;
+    totalMs = parseInputs();
+    remainingMs = totalMs;
+    lockedCapsule = '';
+    refreshDisplay();
+    setStatus('Valmis', '');
+    btnStart.disabled = false;
+    btnStart.textContent = '▶ Aloita';
+    btnPause.disabled = true;
+    setInputsEnabled(true);
+    overlay.classList.add('hidden');
+    overlay.classList.remove('flex');
+  }
+
+  btnStart.addEventListener('click', start);
+  btnPause.addEventListener('click', pause);
+  btnReset.addEventListener('click', reset);
+
+  btnDismiss.addEventListener('click', () => {
+    overlay.classList.add('hidden');
+    overlay.classList.remove('flex');
+  });
+
+  document.querySelectorAll('.preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (running && !paused) return;
+      const sec = parseInt(btn.getAttribute('data-preset'), 10);
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      inH.value = h;
+      inM.value = m;
+      inS.value = s;
+      totalMs = sec * 1000;
+      remainingMs = totalMs;
+      refreshDisplay();
+      setStatus('Valmis', '');
+    });
+  });
+
+  [inH, inM, inS].forEach(el => {
+    el.addEventListener('change', () => {
+      if (running) return;
+      totalMs = parseInputs();
+      remainingMs = totalMs;
+      refreshDisplay();
+    });
+  });
+
+  window.addEventListener('resize', () => { if (!overlay.classList.contains('hidden')) resizeCanvas(); });
+
+  totalMs = parseInputs();
+  remainingMs = totalMs;
+  ring.style.strokeDasharray = String(RING_LEN);
+  refreshDisplay();
+})();
+</script>
+</body>
+</html>

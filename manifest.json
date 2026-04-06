@@ -1,7 +1,7 @@
 {
   "name": "Perhepakki",
   "short_name": "Perhepakki",
-  "description": "Perheen pikasovellukset: tietovisa, laskuharjoitus ja revontuliennuste",
+  "description": "Perheen pikasovellukset: countdown, tietovisa, laskuharjoitus ja revontuliennuste",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

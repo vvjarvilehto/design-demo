@@ -1,14 +1,12 @@
-const CACHE = 'tietovisa-v7';
+const CACHE = 'tietovisa-v8';
 
 const PRECACHE = [
   './',
   'index.html',
   'aurora.html',
   'trivia.html',
-  'trivia-nuoret.html',
   'trivia.json',
   'questions-aikuiset.js',
-  'questions-nuoret.js',
   'manifest.json',
   'icon.svg',
   'sw.js',
@@ -39,7 +37,7 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
 
   const url = new URL(e.request.url);
-  const isTriviaData = ['questions-aikuiset.js', 'questions-nuoret.js', 'trivia.json']
+  const isTriviaData = ['questions-aikuiset.js', 'trivia.json']
     .some(path => url.pathname.endsWith(path));
 
   // Revontuli-/sää-API:t: aina verkko, jotta Kp ja pilvisyys eivät jää vanhaan välimuistiin

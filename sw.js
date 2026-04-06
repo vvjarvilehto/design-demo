@@ -1,4 +1,4 @@
-const CACHE = 'tietovisa-v9';
+const CACHE = 'tietovisa-v10';
 
 const PRECACHE = [
   './',
@@ -52,7 +52,7 @@ self.addEventListener('fetch', e => {
   // Kysymyspankit: verkko ensin, jotta uudet kysymykset päivittyvät heti.
   if (isTriviaData) {
     e.respondWith(
-      fetch(e.request).then(resp => {
+      fetch(e.request, { cache: 'no-cache' }).then(resp => {
         if (resp && resp.status === 200) {
           const clone = resp.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
@@ -63,12 +63,30 @@ self.addEventListener('fetch', e => {
     return;
   }
 
+  const sameOrigin = url.origin === self.location.origin;
+
+  // Sama origin (sivut, skriptit, manifest): verkko ensin — Safari/PWA ei jää vanhaan cacheen.
+  if (sameOrigin) {
+    e.respondWith(
+      fetch(e.request, { cache: 'no-cache' }).then(resp => {
+        if (resp && resp.status === 200) {
+          const clone = resp.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
+        return resp;
+      }).catch(() =>
+        caches.match(e.request).then(cached => cached || caches.match('index.html'))
+      )
+    );
+    return;
+  }
+
+  // Ulkoinen (Tailwind CDN, fontit): välimuisti ensin — nopeampi ja toimii offline-tilassa paremmin
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
 
       return fetch(e.request).then(resp => {
-        // Tallennetaan onnistuneet vastaukset (myös läpinäkymättömät CDN-vastaukset)
         if (resp && (resp.status === 200 || resp.type === 'opaque')) {
           const clone = resp.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));

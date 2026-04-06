@@ -36,7 +36,7 @@
 <div class="max-w-sm mx-auto">
 
   <a href="index.html" class="inline-flex items-center gap-1 text-sm font-semibold text-gray-400 hover:text-gray-600 mb-6 mt-2 transition-colors">
-    ‹ Takaisin
+    ‹ Etusivulle
   </a>
 
   <!-- ── NÄKYMÄ 1: Aihevalinta ── -->
@@ -271,6 +271,7 @@ document.getElementById('json-input').addEventListener('change', function(e) {
         const idx = TOPICS.findIndex(x => x.id === t.id);
         if (idx >= 0) TOPICS[idx] = t; else TOPICS.push(t);
       });
+      localStorage.removeItem(SEEN_KEY);
       document.getElementById('topic-list').innerHTML = '';
       init();
       const status = document.getElementById('json-status');

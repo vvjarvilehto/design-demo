@@ -1,7 +1,7 @@
 // Aikuisten tietovisan kysymyspankki
 // ID-formaatti: ad-{aihe}-{numero}
 //   Aiheprefiksit: yl=yleistieto, hi=historia, ti=tiede,
-//                  ur=urheilu, ma=maantieto, vi=viihde
+//                  ur=urheilu, ma=maantieto, vi=elokuvat/sarjat, po=pop-musiikki
 //
 // Lisää uusia kysymyksiä kunkin aiheen loppuun ja jatka numerointia.
 
@@ -22,7 +22,16 @@ const TOPICS = [
       { id: 'ad-yl-008', q: 'Montako siipeä mehiläisellä on?', a: 3, opts: ['2', '6', '8', '4'] },
       { id: 'ad-yl-009', q: 'Mikä on maailman väkirikkain maa (2024)?', a: 1, opts: ['Kiina', 'Intia', 'USA', 'Indonesia'] },
       { id: 'ad-yl-010', q: 'Kuinka monta kuukautta on vuodessa?', a: 2, opts: ['10', '11', '12', '13'] },
-      // --- lisää uusia yleistieto-kysymyksiä tähän (ad-yl-011, ad-yl-012, ...) ---
+      { id: 'ad-yl-011', q: 'Mikä on maailman väkirikkain kaupunki taajamineen (n. 2024)?', a: 2, opts: ['New York', 'Mumbai', 'Tokio', 'São Paulo'] },
+      { id: 'ad-yl-012', q: 'Mikä näistä on jääkauden aikainen jäännealue Suomessa?', a: 1, opts: ['Koli', 'Salpausselkä', 'Hetta', 'Nuuksio'] },
+      { id: 'ad-yl-013', q: 'Kuinka monta soittajaa on yleensä klassisessa jousikvartetissa?', a: 2, opts: ['2', '3', '4', '5'] },
+      { id: 'ad-yl-014', q: 'Mikä on maailman suurin autonvalmistaja yksikkömäärällä mitattuna (tyypillisesti)?', a: 0, opts: ['Toyota', 'Volkswagen', 'Hyundai', 'Ford'] },
+      { id: 'ad-yl-015', q: 'Mikä eläin on tunnettu mustavalkoisista raidallisista poikasistaan?', a: 3, opts: ['Panda', 'Tiikeri', 'Seepra', 'Merimetso'] },
+      { id: 'ad-yl-016', q: 'Mikä on Suomen kansallislintu?', a: 0, opts: ['Laulujoutsen', 'Harmaahaikara', 'Koskikara', 'Kuovi'] },
+      { id: 'ad-yl-017', q: 'Montako astetta on oikeassa kulmassa?', a: 1, opts: ['45°', '90°', '180°', '360°'] },
+      { id: 'ad-yl-018', q: 'Mikä näistä on makein luonnon makeusaine?', a: 2, opts: ['Glukoosi', 'Laktoosi', 'Fruktoosi', 'Sakkaroosi'] },
+      { id: 'ad-yl-019', q: 'Kuka kirjoitti romaanin "1984"?', a: 1, opts: ['Aldous Huxley', 'George Orwell', 'Ray Bradbury', 'Kurt Vonnegut'] },
+      { id: 'ad-yl-020', q: 'Mikä on maailman suurin aavikko?', a: 0, opts: ['Antarktika (jää-aavikko)', 'Sahara', 'Gobi', 'Arabian niemimaa'] },
     ]
   },
   {
@@ -41,7 +50,16 @@ const TOPICS = [
       { id: 'ad-hi-008', q: 'Milloin Berliinin muuri kaatui?', a: 1, opts: ['1988', '1989', '1990', '1991'] },
       { id: 'ad-hi-009', q: 'Missä vuodessa toinen maailmansota päättyi?', a: 2, opts: ['1943', '1944', '1945', '1946'] },
       { id: 'ad-hi-010', q: 'Mikä oli Napoleonin viimeinen tappio -taistelu?', a: 0, opts: ['Waterloo', 'Austerlitz', 'Leipzig', 'Moskova'] },
-      // --- lisää uusia historia-kysymyksiä tähän (ad-hi-011, ad-hi-012, ...) ---
+      { id: 'ad-hi-011', q: 'Minä vuonna Berliinin muuri avattiin liikenteelle ja murtui käytännössä?', a: 1, opts: ['1987', '1989', '1991', '1993'] },
+      { id: 'ad-hi-012', q: 'Kuka oli Rooman ensimmäinen keisari?', a: 2, opts: ['Julius Caesar', 'Nero', 'Augustus', 'Trajanus'] },
+      { id: 'ad-hi-013', q: 'Missä vuosisadassa musta surma riehui Euroopassa laajasti?', a: 0, opts: ['1300-luvulla', '1500-luvulla', '1600-luvulla', '1200-luvulla'] },
+      { id: 'ad-hi-014', q: 'Mikä valtio lähetti ensimmäisenä ihmisen kiertoradalle?', a: 0, opts: ['Neuvostoliitto', 'Yhdysvallat', 'Kiina', 'Ranska'] },
+      { id: 'ad-hi-015', q: 'Kuka oli Yhdysvaltain ensimmäinen presidentti?', a: 1, opts: ['Thomas Jefferson', 'George Washington', 'Abraham Lincoln', 'John Adams'] },
+      { id: 'ad-hi-016', q: 'Milloin ihmisoikeuksien yleismaailmallinen julistus hyväksyttiin YK:ssa?', a: 2, opts: ['1945', '1946', '1948', '1950'] },
+      { id: 'ad-hi-017', q: 'Mikä imperiumi rakennettiin suurelta osin 1200-luvulla Mongoliaan?', a: 0, opts: ['Mongolivaltakunta', 'Osmani', 'Rooma', 'Britannia'] },
+      { id: 'ad-hi-018', q: 'Kuka oli Neuvostoliiton johtaja toisen maailmansodan lopussa?', a: 2, opts: ['Lenin', 'Hruštšov', 'Stalin', 'Brežnev'] },
+      { id: 'ad-hi-019', q: 'Missä vuonna Berliinin olympialaiset järjestettiin (Natsi-Saksa)?', a: 1, opts: ['1934', '1936', '1938', '1940'] },
+      { id: 'ad-hi-020', q: 'Mikä oli antiikin Kreikan tunnettu kaupunkivaltio, jossa demokratia kehittyi varhain?', a: 0, opts: ['Ateena', 'Sparta', 'Theba', 'Korintti'] },
     ]
   },
   {
@@ -60,7 +78,16 @@ const TOPICS = [
       { id: 'ad-ti-008', q: 'Mikä alkuaine merkitään Au?', a: 0, opts: ['Kulta', 'Hopea', 'Kupari', 'Rauta'] },
       { id: 'ad-ti-009', q: 'Kuinka monta alkuainetta on jaksollisessa järjestelmässä?', a: 2, opts: ['108', '112', '118', '124'] },
       { id: 'ad-ti-010', q: 'Mitä O₂ tarkoittaa?', a: 1, opts: ['Yksi happiatomi', 'Kaksi happiatomia', 'Happiioni', 'Happioksidi'] },
-      // --- lisää uusia tiede-kysymyksiä tähän (ad-ti-011, ad-ti-012, ...) ---
+      { id: 'ad-ti-011', q: 'Mikä kaasu muodostaa suurimman osan Maan ilmakehästä tilavuudelta?', a: 1, opts: ['Happi', 'Typpi', 'Hiilidioksidi', 'Argon'] },
+      { id: 'ad-ti-012', q: 'Mikä on DNA:n rakenneosien perusmuoto?', a: 2, opts: ['Aminohappoketju', 'Rasvahappo', 'Kaksoiskierre', 'Kuutio'] },
+      { id: 'ad-ti-013', q: 'Mikä eläinryhmä on matelijoita?', a: 0, opts: ['Käärmeet', 'Sammakot', 'Linnut', 'Nisäkkäät'] },
+      { id: 'ad-ti-014', q: 'Mikä on normaali ihmisen ruumiinlämpö celsiusasteina?', a: 3, opts: ['35,5 °C', '36,0 °C', '36,5 °C', '37,0 °C'] },
+      { id: 'ad-ti-015', q: 'Mikä planeetta on tunnettu renkaistaan?', a: 1, opts: ['Jupiter', 'Saturnus', 'Uranus', 'Mars'] },
+      { id: 'ad-ti-016', q: 'Mitä tarkoittaa pH 7 veteen viitaten?', a: 2, opts: ['Hyvin hapanta', 'Hyvin emäksinen', 'Neutraali', 'Suolainen'] },
+      { id: 'ad-ti-017', q: 'Mikä on valon nopeus tyhjiössä likimäärin?', a: 0, opts: ['300 000 km/s', '150 000 km/s', '400 000 km/s', '1 000 000 km/s'] },
+      { id: 'ad-ti-018', q: 'Mikä eläin on nisäkkäiden suurin (painoltaan)?', a: 0, opts: ['Sinivalas', 'Afrikannorsu', 'Virtahepo', 'Kirahvi'] },
+      { id: 'ad-ti-019', q: 'Mikä on fotosynteesin pääraaka-aineista ilmakehästä?', a: 0, opts: ['Hiilidioksidi', 'Happi', 'Typpi', 'Metaani'] },
+      { id: 'ad-ti-020', q: 'Montako kromosomiparia ihmisellä on tavallisesti?', a: 2, opts: ['21', '22', '23', '24'] },
     ]
   },
   {
@@ -79,7 +106,16 @@ const TOPICS = [
       { id: 'ad-ur-008', q: 'Kuinka monta pelaajaa on koripallojoukkueessa kentällä?', a: 2, opts: ['4', '6', '5', '7'] },
       { id: 'ad-ur-009', q: 'Missä vuodessa Suomi voitti jääkiekon MM-kultaa ensimmäistä kertaa?', a: 1, opts: ['1993', '1995', '1998', '2001'] },
       { id: 'ad-ur-010', q: 'Kenellä on eniten Grand Slam -voittoja tennishistoriassa (2024)?', a: 0, opts: ['Novak Djokovic', 'Rafael Nadal', 'Roger Federer', 'Andy Murray'] },
-      // --- lisää uusia urheilu-kysymyksiä tähän (ad-ur-011, ad-ur-012, ...) ---
+      { id: 'ad-ur-011', q: 'Montako pelaajaa on maahockeykentällä joukkuetta kohden samaan aikaan?', a: 2, opts: ['5', '6', '11', '9'] },
+      { id: 'ad-ur-012', q: 'Mikä maa voitti miesten jalkapallon EM-kultaa 2024?', a: 0, opts: ['Espanja', 'Englanti', 'Ranska', 'Saksa'] },
+      { id: 'ad-ur-013', q: 'Kuinka pitkä on maratonjuoksu virallisesti?', a: 1, opts: ['40,195 km', '42,195 km', '45 km', '50 km'] },
+      { id: 'ad-ur-014', q: 'Missä lajissa kilpaillaan Tour de France -ajossa?', a: 0, opts: ['Maantiepyöräily', 'Moottoripyöräily', 'Juoksu', 'Hiihto'] },
+      { id: 'ad-ur-015', q: 'Montako pistettä annetaan koripallon vapaaheitosta onnistuessa?', a: 1, opts: ['2', '1', '3', '0'] },
+      { id: 'ad-ur-016', q: 'Mikä on golfissa paras yhden reiän tulos?', a: 0, opts: ['Hole in one', 'Eagle', 'Birdie', 'Bogey'] },
+      { id: 'ad-ur-017', q: 'Missä talviolympialaisissa järjestettiin ensimmäisen kerran lumilautailu?', a: 2, opts: ['Lillehammer 1994', 'Albertville 1992', 'Nagano 1998', 'Salt Lake City 2002'] },
+      { id: 'ad-ur-018', q: 'Mikä maa on voittanut eniten miesten jalkapallon MM-kisoja (2024)?', a: 0, opts: ['Brasilia', 'Saksa', 'Italia', 'Argentiina'] },
+      { id: 'ad-ur-019', q: 'Mitä tarkoittaa tennisottelussa "deuce"?', a: 2, opts: ['Erä päättynyt', 'Tauko', '40–40', 'Syöttövuoro vaihtuu'] },
+      { id: 'ad-ur-020', q: 'Kuinka monta erää miesten Wimbledonin loppuottelussa voittoon tarvitaan (yleensä)?', a: 1, opts: ['2', '3', '4', '5'] },
     ]
   },
   {
@@ -98,12 +134,21 @@ const TOPICS = [
       { id: 'ad-ma-008', q: 'Mikä on maailman suurin valtameri?', a: 0, opts: ['Tyyni valtameri', 'Atlantti', 'Intian valtameri', 'Arktinen'] },
       { id: 'ad-ma-009', q: 'Mikä on Suomen pisin joki?', a: 1, opts: ['Oulujoki', 'Kemijoki', 'Kokemäenjoki', 'Iijoki'] },
       { id: 'ad-ma-010', q: 'Missä maassa sijaitsee Taj Mahal?', a: 2, opts: ['Pakistanissa', 'Bangladeshissa', 'Intiassa', 'Sri Lankassa'] },
-      // --- lisää uusia maantieto-kysymyksiä tähän (ad-ma-011, ad-ma-012, ...) ---
+      { id: 'ad-ma-011', q: 'Mikä on Australian pääkaupunki?', a: 2, opts: ['Sydney', 'Melbourne', 'Canberra', 'Brisbane'] },
+      { id: 'ad-ma-012', q: 'Mikä on maailman pisin vuoristo?', a: 0, opts: ['Andit', 'Himalaja', 'Rockyt', 'Alpit'] },
+      { id: 'ad-ma-013', q: 'Missä maassa sijaitsee Machu Picchu?', a: 1, opts: ['Boliviassa', 'Perussa', 'Chilessä', 'Ecuadorissa'] },
+      { id: 'ad-ma-014', q: 'Mikä on Afrikan suurin maa pinta-alaltaan?', a: 0, opts: ['Algeria', 'Kongon demokraattinen tasavalta', 'Sudan', 'Libya'] },
+      { id: 'ad-ma-015', q: 'Mikä on Norjan pääkaupunki?', a: 0, opts: ['Oslo', 'Bergen', 'Trondheim', 'Stavanger'] },
+      { id: 'ad-ma-016', q: 'Mikä meri on Pohjois-Euroopan ja Grönlannin välissä?', a: 1, opts: ['Barentsinmeri', 'Norjanmeri', 'Itämeri', 'Pohjanmeri'] },
+      { id: 'ad-ma-017', q: 'Mikä on maailman syvin tunnettu valtamerenpohjan kuoppa (likimäärin)?', a: 2, opts: ['Puerto Ricon kaivo', 'Java-kuoppa', 'Mariana-kuoppa', 'Tonga-kuoppa'] },
+      { id: 'ad-ma-018', q: 'Missä maanosassa on Sahara?', a: 0, opts: ['Afrikassa', 'Aasiassa', 'Etelä-Amerikassa', 'Australian'] },
+      { id: 'ad-ma-019', q: 'Mikä on Kanadan pääkaupunki?', a: 1, opts: ['Toronto', 'Ottawa', 'Vancouver', 'Montreal'] },
+      { id: 'ad-ma-020', q: 'Mikä on maailman väkirikkain saarivaltio?', a: 0, opts: ['Indonesia', 'Japani', 'Filippiinit', 'Uusi-Seelanti'] },
     ]
   },
   {
     id: 'viihde',
-    name: 'Elokuvat & Musiikki',
+    name: 'Elokuvat & sarjat',
     emoji: '🎬',
     color: ['rgba(219,39,119,0.12)', 'rgba(219,39,119,0.22)', '#9d174d'],
     questions: [
@@ -117,7 +162,54 @@ const TOPICS = [
       { id: 'ad-vi-008', q: 'Mikä suomalainen yhtye tunnetaan kappaleesta "Wish I Had an Angel"?', a: 1, opts: ['HIM', 'Nightwish', 'Apocalyptica', 'Children of Bodom'] },
       { id: 'ad-vi-009', q: 'Kuinka monta Oscar-palkintoa "Taru sormusten herrasta: Kuninkaan paluu" voitti?', a: 3, opts: ['8', '9', '10', '11'] },
       { id: 'ad-vi-010', q: 'Mikä on Disney-elokuvien klassikko vuodelta 1994?', a: 2, opts: ['Aladdin', 'Kaunotar ja hirviö', 'Leijonakuningas', 'Pocahontas'] },
-      // --- lisää uusia viihde-kysymyksiä tähän (ad-vi-011, ad-vi-012, ...) ---
+      { id: 'ad-vi-011', q: 'Kuka ohjasi elokuvan "Dune" (2021)?', a: 0, opts: ['Denis Villeneuve', 'Christopher Nolan', 'Ridley Scott', 'James Cameron'] },
+      { id: 'ad-vi-012', q: 'Mikä on George R. R. Martinin kirjasarjan "A Song of Ice and Fire" suomenkielinen nimi?', a: 0, opts: ['Tulen ja jään laulu', 'Keskiyön taru', 'Vanhan maailman kronikka', 'Varjojen maa'] },
+      { id: 'ad-vi-013', q: 'Kuka näytteli Jackia elokuvassa "Titanic" (1997)?', a: 2, opts: ['Brad Pitt', 'Johnny Depp', 'Leonardo DiCaprio', 'Tom Cruise'] },
+      { id: 'ad-vi-014', q: 'Mikä on "Star Wars" -elokuvien fiktiivinen ase, jolla taistellaan miekkatapaisesti?', a: 0, opts: ['Valomiekka', 'Plasmapistooli', 'Disruptori', 'Phaser'] },
+      { id: 'ad-vi-015', q: 'Mikä studio tuotti useimmat Marvel Cinematic Universen elokuvat?', a: 0, opts: ['Marvel Studios', 'Warner Bros.', 'Universal', 'Sony Pictures'] },
+      { id: 'ad-vi-016', q: 'Kuka näytteli Hermionea Harry Potter -elokuvissa?', a: 1, opts: ['Emma Stone', 'Emma Watson', 'Keira Knightley', 'Natalie Portman'] },
+      { id: 'ad-vi-017', q: 'Mikä on Netflix-sarja, jossa nuoret selvittävät Hawkinsin outoja tapahtumia?', a: 2, opts: ['Dark', 'The Witcher', 'Stranger Things', '1899'] },
+      { id: 'ad-vi-018', q: 'Kenen romaaneihin perustuu "Taru sormusten herrasta" -elokuvatrilogia?', a: 0, opts: ['J.R.R. Tolkien', 'C.S. Lewis', 'George R.R. Martin', 'Ursula K. Le Guin'] },
+      { id: 'ad-vi-019', q: 'Mikä on animaatioelokuva, jossa päähenkilönä on nuori prinsessa Elsa ja Anna?', a: 1, opts: ['Tangled', 'Frozen', 'Moana', 'Encanto'] },
+      { id: 'ad-vi-020', q: 'Kuka näytteli Jokeria elokuvassa "Joker" (2019)?', a: 2, opts: ['Heath Ledger', 'Jared Leto', 'Joaquin Phoenix', 'Willem Dafoe'] },
+    ]
+  },
+  {
+    id: 'popmusiikki',
+    name: 'Pop-musiikki',
+    emoji: '🎤',
+    color: ['rgba(236,72,153,0.14)', 'rgba(236,72,153,0.26)', '#be185d'],
+    questions: [
+      { id: 'ad-po-001', q: 'Kuka esitti kappaleen "Rolling in the Deep"?', a: 0, opts: ['Adele', 'Amy Winehouse', 'Dua Lipa', 'Sia'] },
+      { id: 'ad-po-002', q: 'Mikä yhtye levytti albumin "Abbey Road"?', a: 1, opts: ['The Rolling Stones', 'The Beatles', 'Queen', 'Led Zeppelin'] },
+      { id: 'ad-po-003', q: 'Kuka tunnetaan lempinimellä "Queen Bey"?', a: 2, opts: ['Rihanna', 'Lady Gaga', 'Beyoncé', 'Ariana Grande'] },
+      { id: 'ad-po-004', q: 'Mikä oli Michael Jacksonin vuonna 1982 julkaistu myyntimenestysalbumi?', a: 0, opts: ['Thriller', 'Bad', 'Dangerous', 'Off the Wall'] },
+      { id: 'ad-po-005', q: 'Kuka esitti kappaleen "Uptown Funk" yhdessä Mark Ronsonin kanssa?', a: 3, opts: ['Justin Timberlake', 'Pharrell Williams', 'The Weeknd', 'Bruno Mars'] },
+      { id: 'ad-po-006', q: 'Mikä ruotsalainen duo voitti Euroviisut 1974 kappaleella "Waterloo"?', a: 1, opts: ['Roxette', 'ABBA', 'Ace of Base', 'Avicii'] },
+      { id: 'ad-po-007', q: 'Kuka lauloi "Bad Guy" -hitin?', a: 0, opts: ['Billie Eilish', 'Olivia Rodrigo', 'Doja Cat', 'Halsey'] },
+      { id: 'ad-po-008', q: 'Mikä yhtye esitti "Bohemian Rhapsodyn"?', a: 2, opts: ['The Who', 'Pink Floyd', 'Queen', 'Genesis'] },
+      { id: 'ad-po-009', q: 'Kuka on kanadalainen artisti, joka tunnetaan albumeista "Take Care" ja "Scorpion"?', a: 0, opts: ['Drake', 'The Weeknd', 'Justin Bieber', 'Shawn Mendes'] },
+      { id: 'ad-po-010', q: 'Mikä kappale alkaa sanoilla "Is this the real life? Is this just fantasy?"', a: 1, opts: ['We Will Rock You', 'Bohemian Rhapsody', 'Don\'t Stop Me Now', 'Somebody to Love'] },
+      { id: 'ad-po-011', q: 'Kuka esitti "Like a Prayer" -kappaleen?', a: 0, opts: ['Madonna', 'Cher', 'Cyndi Lauper', 'Janet Jackson'] },
+      { id: 'ad-po-012', q: 'Mikä yhdysvaltalainen pop-tähti julkaisi albumin "1989" (2014)?', a: 2, opts: ['Katy Perry', 'Miley Cyrus', 'Taylor Swift', 'Selena Gomez'] },
+      { id: 'ad-po-013', q: 'Kuka oli Nirvanan laulaja ja kitaristi?', a: 1, opts: ['Dave Grohl', 'Kurt Cobain', 'Krist Novoselić', 'Eddie Vedder'] },
+      { id: 'ad-po-014', q: 'Mikä kappale on tunnettu rivistä "I\'m gonna swing from the chandelier"?', a: 0, opts: ['Chandelier', 'Elastic Heart', 'Cheap Thrills', 'Titanium'] },
+      { id: 'ad-po-015', q: 'Kuka esitti "Shape of You" -megahitin?', a: 0, opts: ['Ed Sheeran', 'Sam Smith', 'Harry Styles', 'Shawn Mendes'] },
+      { id: 'ad-po-016', q: 'Mikä yhtye levytti "Hotel California" -kappaleen?', a: 2, opts: ['Fleetwood Mac', 'The Doors', 'Eagles', 'Creedence'] },
+      { id: 'ad-po-017', q: 'Kuka on "Material Girl" -kappaleen tunnettu esittäjä?', a: 0, opts: ['Madonna', 'Whitney Houston', 'Mariah Carey', 'Celine Dion'] },
+      { id: 'ad-po-018', q: 'Mikä suomalainen yhtye levytti "Freestyler"-hitin?', a: 1, opts: ['Darude', 'Bomfunk MC\'s', 'Nightwish', 'The Rasmus'] },
+      { id: 'ad-po-019', q: 'Kuka esitti kappaleen "Blinding Lights"?', a: 0, opts: ['The Weeknd', 'Post Malone', 'Drake', 'Travis Scott'] },
+      { id: 'ad-po-020', q: 'Mikä yhtye julkaisi albumin "Random Access Memories" (2013)?', a: 3, opts: ['Justice', 'Chemical Brothers', 'Moby', 'Daft Punk'] },
+      { id: 'ad-po-021', q: 'Kuka lauloi "drivers license" -debyyttihitin (2021)?', a: 2, opts: ['Billie Eilish', 'Dua Lipa', 'Olivia Rodrigo', 'Sabrina Carpenter'] },
+      { id: 'ad-po-022', q: 'Mikä yhtye esitti "Wonderwall"?', a: 0, opts: ['Oasis', 'Blur', 'Radiohead', 'Coldplay'] },
+      { id: 'ad-po-023', q: 'Kuka on "Rehab"-kappaleen esittäjä?', a: 1, opts: ['Lily Allen', 'Amy Winehouse', 'Adele', 'Joss Stone'] },
+      { id: 'ad-po-024', q: 'Mikä korealainen yhtye julkaisi hitin "Dynamite" (2020)?', a: 0, opts: ['BTS', 'BLACKPINK', 'EXO', 'TWICE'] },
+      { id: 'ad-po-025', q: 'Kuka esitti "Poker Face" -kappaleen?', a: 0, opts: ['Lady Gaga', 'Kesha', 'P!nk', 'Katy Perry'] },
+      { id: 'ad-po-026', q: 'Mikä yhtye levytti "Sweet Child o\' Mine"?', a: 2, opts: ['AC/DC', 'Metallica', 'Guns N\' Roses', 'Mötley Crüe'] },
+      { id: 'ad-po-027', q: 'Kuka lauloi "Viva la Vida" -kappaleen yhtyeessä Coldplay?', a: 0, opts: ['Chris Martin', 'Jonny Buckland', 'Guy Berryman', 'Will Champion'] },
+      { id: 'ad-po-028', q: 'Mikä on artistin The Weeknd oikea nimi?', a: 0, opts: ['Abel Makkonen Tesfaye', 'Aubrey Graham', 'Marshall Mathers', 'Jahseh Onfroy'] },
+      { id: 'ad-po-029', q: 'Kuka esitti dueton "Shallow" elokuvasta "A Star Is Born" (2018)?', a: 0, opts: ['Lady Gaga ja Bradley Cooper', 'Taylor Swift ja Ed Sheeran', 'Rihanna ja Drake', 'Adele ja Sam Smith'] },
+      { id: 'ad-po-030', q: 'Mikä yhtye levytti "Smells Like Teen Spirit"?', a: 2, opts: ['Pearl Jam', 'Soundgarden', 'Nirvana', 'Alice in Chains'] },
     ]
   },
 ];

@@ -1,4 +1,4 @@
-const CACHE = 'tietovisa-v4';
+const CACHE = 'tietovisa-v5';
 
 const PRECACHE = [
   './',
@@ -39,10 +39,27 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
 
   const url = new URL(e.request.url);
+  const isTriviaData = ['questions-aikuiset.js', 'questions-nuoret.js', 'trivia.json']
+    .some(path => url.pathname.endsWith(path));
+
   // Revontuli-/sää-API:t: aina verkko, jotta Kp ja pilvisyys eivät jää vanhaan välimuistiin
   if (url.hostname === 'services.swpc.noaa.gov' || url.hostname === 'api.open-meteo.com') {
     e.respondWith(
       fetch(e.request).catch(() => caches.match('index.html'))
+    );
+    return;
+  }
+
+  // Kysymyspankit: verkko ensin, jotta uudet kysymykset päivittyvät heti.
+  if (isTriviaData) {
+    e.respondWith(
+      fetch(e.request).then(resp => {
+        if (resp && resp.status === 200) {
+          const clone = resp.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
+        return resp;
+      }).catch(() => caches.match(e.request))
     );
     return;
   }

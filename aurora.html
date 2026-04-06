@@ -48,6 +48,18 @@
       <p id="geoHint" class="text-xs text-slate-500 mt-2 hidden"></p>
     </section>
 
+    <section class="rounded-3xl border border-slate-700/80 bg-slate-900/80 backdrop-blur p-5 mb-5">
+      <label for="targetTime" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Laske ajalle</label>
+      <input
+        id="targetTime"
+        type="datetime-local"
+        class="w-full rounded-2xl bg-slate-800 border border-slate-600 px-4 py-3 font-semibold text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+      />
+      <p class="text-xs text-slate-500 mt-2">
+        Arvio käyttää valittua hetkeä lähtökohtana ja tarkastelee seuraavien 48 tunnin pimeitä tunteja.
+      </p>
+    </section>
+
     <div id="status" class="text-center text-slate-400 text-sm font-medium mb-4 min-h-[1.25rem]">Ladataan…</div>
 
     <section id="results" class="hidden space-y-4">
@@ -181,6 +193,31 @@
       return { avgCloud: sum / n, nightHours: n };
     }
 
+    function toDateTimeLocalValue(date) {
+      const d = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+      return d.toISOString().slice(0, 16);
+    }
+
+    function parseTargetTimeMs() {
+      const raw = $('targetTime').value;
+      const parsed = new Date(raw);
+      if (!raw || Number.isNaN(parsed.getTime())) {
+        throw new Error('Anna kelvollinen päivämäärä ja aika.');
+      }
+      return parsed.getTime();
+    }
+
+    function formatFiDateTime(ts) {
+      return new Date(ts).toLocaleString('fi-FI', {
+        weekday: 'short',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    }
+
     async function fetchLatestKp() {
       const res = await fetch(NOAA_KP_URL);
       if (!res.ok) throw new Error('K-indeksiä ei voitu lukea (NOAA).');
@@ -231,12 +268,19 @@
         lon = c.lon;
       }
 
+      let targetMs;
+      try {
+        targetMs = parseTargetTimeMs();
+      } catch (e) {
+        showError(e.message || 'Virheellinen aika.');
+        return;
+      }
+
       setLoading('Haetaan K-indeksiä ja ennustetta…');
       $('errorBox').classList.add('hidden');
       try {
         const [kpData, wx] = await Promise.all([fetchLatestKp(), fetchHourlyWeather(lat, lon)]);
-        const nowMs = Date.now();
-        const { avgCloud, nightHours } = nightCloudStats(wx.hourly, nowMs);
+        const { avgCloud, nightHours } = nightCloudStats(wx.hourly, targetMs);
         const activity = kpToActivity(kpData.kp, lat);
 
         let clarity = null;
@@ -253,7 +297,7 @@
           $('clarityVal').textContent = '—';
           $('clarityDetail').textContent =
             nightHours === 0
-              ? 'Ei yön tunteja 48 h ikkunassa (esim. yöttömät yöt tai rajattu data). Revontulet vaativat pimeää taivasta.'
+              ? 'Ei yön tunteja valitun ajan 48 h ikkunassa (esim. yöttömät yöt tai rajattu data). Revontulet vaativat pimeää taivasta.'
               : 'Pilvisyyttä ei voitu laskea.';
           $('combinedPct').textContent = '—';
           $('combinedLabel').textContent =
@@ -261,16 +305,17 @@
         } else {
           $('clarityVal').textContent = `${clarity} %`;
           $('clarityDetail').textContent =
-            `Keskim. pilvisyys ${Math.round(avgCloud)} % yön tunneilla (${nightHours} tuntia seur. 48 h). ${clarityWord(clarity)}`;
+            `Keskim. pilvisyys ${Math.round(avgCloud)} % yön tunneilla (${nightHours} tuntia valitusta hetkestä seur. 48 h). ${clarityWord(clarity)}`;
           $('combinedPct').textContent = `${combined} %`;
           $('combinedLabel').textContent =
             `Aktiivisuus ${activity} % × taivas ${clarity} % ≈ ${combined} %. Todellinen näkeminen riippuu myös valosaasteesta ja horisontista.`;
         }
 
         $('results').classList.remove('hidden');
+        const targetLabel = formatFiDateTime(targetMs);
         $('status').textContent = kpData.timeTag
-          ? `K-indeksi päivitetty: ${kpData.timeTag} UTC`
-          : 'Valmis.';
+          ? `Arvio ajalle ${targetLabel} (K-indeksi päivitetty: ${kpData.timeTag} UTC)`
+          : `Arvio ajalle ${targetLabel}`;
       } catch (e) {
         showError(e.message || 'Tuntematon virhe.');
       }
@@ -278,6 +323,7 @@
 
     $('btnRefresh').addEventListener('click', () => run());
     $('city').addEventListener('change', () => run());
+    $('targetTime').addEventListener('change', () => run());
 
     $('btnGeo').addEventListener('click', () => {
       const hint = $('geoHint');
@@ -313,6 +359,7 @@
       );
     });
 
+    $('targetTime').value = toDateTimeLocalValue(new Date());
     run();
   </script>
   <script>

@@ -1,4 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="110" fill="#7c3aed"/>
-  <text x="256" y="370" font-family="system-ui,sans-serif" font-weight="900" font-size="340" fill="white" text-anchor="middle">?</text>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+    <linearGradient id="book" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f3f4f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="110" fill="url(#bg)"/>
+  <circle cx="256" cy="152" r="54" fill="#fde68a" opacity="0.95"/>
+  <rect x="110" y="212" width="292" height="188" rx="32" fill="url(#book)" opacity="0.96"/>
+  <path d="M146 242h96c18 0 33 15 33 33v95h-129v-128z" fill="#ffffff"/>
+  <path d="M366 242h-96c-18 0-33 15-33 33v95h129v-128z" fill="#f9fafb"/>
+  <path d="M256 242v128" stroke="#d1d5db" stroke-width="10" stroke-linecap="round"/>
+  <path d="M172 278h70M172 306h70M172 334h58" stroke="#c4b5fd" stroke-width="10" stroke-linecap="round"/>
+  <path d="M282 278h58M282 306h70M282 334h70" stroke="#86efac" stroke-width="10" stroke-linecap="round"/>
+  <text x="256" y="458" font-family="Nunito,system-ui,sans-serif" font-weight="900" font-size="58" fill="#ffffff" text-anchor="middle">PP</text>
 </svg>

@@ -18,10 +18,26 @@
       color: #9a3412 !important;
       box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.4);
     }
+    /* datetime-local:lla on usein leveä sisäinen minimileveys (mobiili-WebKit) */
     input[type="datetime-local"] {
+      display: block;
+      width: 100%;
       max-width: 100%;
       min-width: 0;
       box-sizing: border-box;
+    }
+    #event-datetime-wrap {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+    /* WebKit: datetime-local sisäinen leveys voi ylittää 100 % ilman näitä */
+    #event-datetime::-webkit-datetime-edit-fields-wrapper {
+      max-width: 100%;
+    }
+    #event-datetime::-webkit-datetime-edit {
+      max-width: 100%;
+      padding: 0;
     }
     #ring {
       transform: rotate(-90deg);
@@ -126,12 +142,14 @@
     </div>
 
     <!-- Tapahtuma-aika -->
-    <div id="event-card" class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hidden min-w-0 overflow-hidden">
+    <div id="event-card" class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hidden min-w-0 max-w-full overflow-hidden">
       <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Tapahtuman ajankohta</div>
-      <label class="block min-w-0">
+      <label class="block w-full min-w-0 max-w-full">
         <span class="block text-xs font-bold text-gray-400 mb-1">Päivämäärä ja aika</span>
-        <input id="event-datetime" type="datetime-local"
-          class="w-full min-w-0 max-w-full rounded-2xl border-2 border-orange-100 px-3 py-2 text-base font-semibold focus:border-orange-400 outline-none" />
+        <div id="event-datetime-wrap" class="rounded-2xl border-2 border-orange-100 bg-white focus-within:border-orange-400 transition-colors">
+          <input id="event-datetime" type="datetime-local"
+            class="w-full min-w-0 max-w-full rounded-2xl border-0 border-transparent px-2.5 sm:px-3 py-2 text-sm sm:text-base font-semibold focus:ring-0 focus:outline-none bg-transparent" />
+        </div>
       </label>
     </div>
 

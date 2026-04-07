@@ -69,6 +69,20 @@
         <p id="combinedLabel" class="text-slate-400 text-xs mt-2"></p>
       </div>
 
+      <section id="chartSection" class="rounded-2xl border border-slate-700/80 bg-slate-900/70 p-4">
+        <div class="flex items-start justify-between gap-2 mb-1">
+          <div>
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Seuraavat 8 tuntia</h2>
+            <p class="text-xs text-slate-500 mt-1 leading-snug">
+              Todennäköisyys valitussa sijainnissa tunti kerrallaan (sama malli kuin yllä). Magneettinen aktiivisuus on viimeisin Kp koko ikkunalle.
+            </p>
+          </div>
+        </div>
+        <div id="chartWrap" class="mt-3 w-full overflow-x-auto">
+          <!-- SVG täytetään skriptillä -->
+        </div>
+      </section>
+
       <div class="grid grid-cols-2 gap-3">
         <div class="rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
           <p class="text-xs font-bold text-slate-500 uppercase">Avaruussää</p>
@@ -193,6 +207,137 @@
       return { avgCloud: sum / n, nightHours: n };
     }
 
+    function startOfLocalHour(ms) {
+      const d = new Date(ms);
+      d.setMinutes(0, 0, 0, 0);
+      return d.getTime();
+    }
+
+    /**
+     * Selkeys 0–100 yhdelle tunnille. Päivällä 0 (ei pimeää taivasta → näkeminen käytännössä 0 %).
+     */
+    function hourClarity(cloudPct, isDayVal) {
+      if (isDayVal !== 0) return 0;
+      if (cloudPct == null || Number.isNaN(Number(cloudPct))) return null;
+      return Math.round(Math.max(0, Math.min(100, 100 - Number(cloudPct))));
+    }
+
+    /**
+     * Seuraavat 8 täyttä tuntia paikallisesta kellonajasta (alkaa valitun hetken tunnin alusta).
+     * Yhdistää saman Kp:n kaikille tunneille ja Open-Meteon tuntidataan.
+     */
+    function buildEightHourSeries(hourly, targetMs, lat, kp) {
+      const times = hourly.time;
+      const clouds = hourly.cloud_cover;
+      const isDay = hourly.is_day;
+      const activity = kpToActivity(kp, lat);
+      const hour0 = startOfLocalHour(targetMs);
+      const series = [];
+      const halfHour = 30 * 60 * 1000;
+
+      for (let h = 0; h < 8; h++) {
+        const slotStart = hour0 + h * 3600 * 1000;
+        let bestI = -1;
+        let bestDiff = Infinity;
+        for (let i = 0; i < times.length; i++) {
+          const t = new Date(times[i]).getTime();
+          const diff = Math.abs(t - slotStart);
+          if (diff < bestDiff) {
+            bestDiff = diff;
+            bestI = i;
+          }
+        }
+        let combined = null;
+        let clarity = null;
+        let isDayHour = false;
+        let label = '';
+        if (bestI >= 0 && bestDiff <= halfHour) {
+          isDayHour = isDay[bestI] !== 0;
+          clarity = hourClarity(clouds[bestI], isDay[bestI]);
+          if (clarity != null) combined = Math.round((activity * clarity) / 100);
+          label = new Date(times[bestI]).toLocaleTimeString('fi-FI', {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+        } else {
+          label = new Date(slotStart).toLocaleTimeString('fi-FI', {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+        }
+        series.push({ slotStart, label, combined, clarity, activity, isDayHour });
+      }
+      return series;
+    }
+
+    function renderEightHourChart(series) {
+      const wrap = $('chartWrap');
+      const section = $('chartSection');
+      const hasRenderable = series.some((p) => p.combined != null);
+      if (!hasRenderable) {
+        section.classList.add('hidden');
+        wrap.innerHTML = '';
+        return;
+      }
+      section.classList.remove('hidden');
+
+      const W = 320;
+      const H = 168;
+      const padL = 8;
+      const padR = 8;
+      const padT = 10;
+      const padB = 36;
+      const chartW = W - padL - padR;
+      const chartH = H - padT - padB;
+      const n = series.length;
+      const gap = 4;
+      const barW = (chartW - gap * (n - 1)) / n;
+      const values = series.map((p) => (p.combined == null ? 0 : p.combined));
+      const maxV = Math.max(8, ...values);
+
+      function barTitle(p) {
+        if (p.combined == null) return `${p.label}: ei säädataa tälle tunnille`;
+        if (p.isDayHour) return `${p.label}: ${p.combined} % (päivä — ei pimeää taivasta)`;
+        return `${p.label}: ${p.combined} % (aktiivisuus ${p.activity} % × taivas ${p.clarity} %)`;
+      }
+
+      const parts = [];
+      parts.push(
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" class="w-full max-w-full h-auto" role="img" aria-label="Kahdeksan tunnin todennäköisyys">`
+      );
+      parts.push(
+        `<text x="${padL}" y="8" fill="#64748b" font-size="9" font-family="Nunito, sans-serif">%</text>`
+      );
+
+      for (let i = 0; i < n; i++) {
+        const p = series[i];
+        const x = padL + i * (barW + gap);
+        const pct = p.combined;
+        const h = pct == null ? 0 : (pct / maxV) * chartH;
+        const y = padT + chartH - h;
+        const title = barTitle(p);
+        if (pct != null) {
+          const g1 = Math.round(34 + (pct / 100) * (167 - 34));
+          const g2 = Math.round(211 + (pct / 100) * (139 - 211));
+          const g3 = Math.round(238 + (pct / 100) * (172 - 238));
+          parts.push(
+            `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(h, 2)}" rx="4" fill="rgb(${g1},${g2},${g3})" stroke="rgba(148,163,184,0.35)" stroke-width="1">` +
+              `<title>${title}</title></rect>`
+          );
+        } else {
+          parts.push(
+            `<rect x="${x}" y="${padT + chartH - 3}" width="${barW}" height="3" rx="2" fill="#334155" opacity="0.6">` +
+              `<title>${title}</title></rect>`
+          );
+        }
+        parts.push(
+          `<text x="${x + barW / 2}" y="${H - 10}" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Nunito, sans-serif">${p.label}</text>`
+        );
+      }
+      parts.push('</svg>');
+      wrap.innerHTML = parts.join('');
+    }
+
     function toDateTimeLocalValue(date) {
       const d = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
       return d.toISOString().slice(0, 16);
@@ -310,6 +455,9 @@
           $('combinedLabel').textContent =
             `Aktiivisuus ${activity} % × taivas ${clarity} % ≈ ${combined} %. Todellinen näkeminen riippuu myös valosaasteesta ja horisontista.`;
         }
+
+        const eightSeries = buildEightHourSeries(wx.hourly, targetMs, lat, kpData.kp);
+        renderEightHourChart(eightSeries);
 
         $('results').classList.remove('hidden');
         const targetLabel = formatFiDateTime(targetMs);

@@ -4,10 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Paras countdown-äppi ikinä</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#ea580c" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     body { font-family: 'Nunito', sans-serif; }
+    body.has-active-timer { padding-top: min(40vh, 11rem); }
     #ring {
       transform: rotate(-90deg);
       transition: stroke-dashoffset 0.35s ease;
@@ -27,11 +30,33 @@
       height: 100%;
       z-index: 40;
     }
+    #active-bar-wrap { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
   </style>
 </head>
 <body class="min-h-screen bg-[#fff7ed] p-5 pb-10">
 
   <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+  <!-- Käynnissä: ajastimet listana -->
+  <div id="active-bar-wrap" class="hidden fixed top-0 left-0 right-0 z-[60] bg-white/95 border-b border-orange-100 backdrop-blur-sm" role="region" aria-label="Käynnissä olevat ajastimet">
+    <div class="max-h-[min(40vh,220px)] overflow-y-auto overscroll-contain">
+      <div id="active-timers-list" class="divide-y divide-orange-50"></div>
+    </div>
+  </div>
+
+  <!-- Laajennettu näkymä -->
+  <div id="detail-backdrop" class="fixed inset-0 z-[70] hidden bg-black/30 backdrop-blur-sm" aria-hidden="true"></div>
+  <div id="detail-panel" class="fixed left-1/2 top-1/2 z-[80] hidden w-[min(92vw,22rem)] -translate-x-1/2 -translate-y-1/2 rounded-3xl bg-white p-6 shadow-2xl border border-orange-100" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+    <h2 id="detail-title" class="text-center text-sm font-bold uppercase tracking-wider text-orange-500 mb-1">Ajastin</h2>
+    <p id="detail-name" class="text-center font-black text-gray-900 text-lg mb-4 truncate px-1"></p>
+    <div id="detail-remaining" class="text-center text-5xl font-black tabular-nums text-gray-900 mb-4">00:00</div>
+    <p class="text-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Päättyy</p>
+    <p id="detail-ends" class="text-center text-base font-bold text-gray-700 mb-2"></p>
+    <p id="detail-mode" class="text-center text-xs font-semibold text-gray-400 mb-6"></p>
+    <button type="button" id="detail-close" class="w-full py-3 rounded-2xl font-black text-white bg-orange-500 hover:bg-orange-600 transition-colors">
+      Sulje
+    </button>
+  </div>
 
   <div class="max-w-md mx-auto relative z-10">
     <a href="index.html" class="inline-flex items-center gap-1 text-sm font-semibold text-orange-400 hover:text-orange-600 mb-3 transition-colors">
@@ -40,18 +65,24 @@
 
     <header class="text-center mb-6">
       <h1 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">Paras countdown-äppi ikinä</h1>
-      <p class="text-gray-500 font-semibold text-sm mt-1">Aseta aika, aloita — lopussa juhla</p>
+      <p class="text-gray-500 font-semibold text-sm mt-1">Valitse aika, nimeä ajastin ja käynnistä</p>
     </header>
 
-    <!-- Tallennetut ajastimet (localStorage, PWA) — päivittyvät kun aloitat ajastuksen -->
-    <div id="saved-section" class="mb-4">
-      <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Tallennetut</div>
-      <p id="saved-empty" class="text-center text-xs text-gray-400 font-medium py-2 px-2">Ei vielä tallennettuja — aloita ajastin, niin se tallentuu tähän listaan.</p>
-      <div id="saved-list" class="hidden space-y-2"></div>
+    <!-- Asetustapa -->
+    <div class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Aika</div>
+      <div class="flex gap-2 justify-center flex-wrap">
+        <button id="mode-duration" type="button" class="px-4 py-2 rounded-2xl text-sm font-bold border-2 border-orange-300 bg-orange-100 text-orange-800 active:scale-95 transition-transform">
+          Valmis aika
+        </button>
+        <button id="mode-event" type="button" class="px-4 py-2 rounded-2xl text-sm font-bold border-2 border-gray-200 bg-white text-gray-600 active:scale-95 transition-transform">
+          Tapahtuma-aika
+        </button>
+      </div>
     </div>
 
-    <!-- Esiasetukset -->
-    <div class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+    <!-- Pikavalinnat (vain kesto) -->
+    <div id="preset-card" class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
       <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pikavalinnat</div>
       <div class="flex flex-wrap gap-2">
         <button type="button" data-preset="60" class="preset px-3 py-2 rounded-2xl text-sm font-bold bg-orange-50 text-orange-800 border border-orange-200 active:scale-95 transition-transform">1 min</button>
@@ -63,22 +94,9 @@
       </div>
     </div>
 
-    <!-- Asetustapa -->
-    <div class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
-      <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Asetustapa</div>
-      <div class="flex gap-2 justify-center flex-wrap">
-        <button id="mode-duration" type="button" class="px-4 py-2 rounded-2xl text-sm font-bold border-2 border-orange-300 bg-orange-100 text-orange-800 active:scale-95 transition-transform">
-          Kesto
-        </button>
-        <button id="mode-event" type="button" class="px-4 py-2 rounded-2xl text-sm font-bold border-2 border-gray-200 bg-white text-gray-600 active:scale-95 transition-transform">
-          Tapahtuma-aika
-        </button>
-      </div>
-    </div>
-
-    <!-- Oma aika -->
-    <div class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
-      <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Oma aika</div>
+    <!-- Oma kesto -->
+    <div id="duration-card" class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Kesto (tunnit, min, sek)</div>
       <div class="flex gap-3 justify-center items-end flex-wrap">
         <label class="text-center">
           <span class="block text-xs font-bold text-gray-400 mb-1">T</span>
@@ -97,19 +115,21 @@
 
     <!-- Tapahtuma-aika -->
     <div id="event-card" class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hidden">
-      <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Tapahtuma</div>
-      <div class="space-y-3">
-        <label class="block">
-          <span class="block text-xs font-bold text-gray-400 mb-1">Nimi (valinnainen)</span>
-          <input id="event-name" type="text" maxlength="60" placeholder="Esim. Lähtö lentokentälle"
-            class="w-full rounded-2xl border-2 border-orange-100 px-3 py-2 text-sm font-semibold focus:border-orange-400 outline-none" />
-        </label>
-        <label class="block">
-          <span class="block text-xs font-bold text-gray-400 mb-1">Päivämäärä ja aika</span>
-          <input id="event-datetime" type="datetime-local"
-            class="w-full rounded-2xl border-2 border-orange-100 px-3 py-2 text-sm font-semibold focus:border-orange-400 outline-none" />
-        </label>
-      </div>
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Tapahtuman ajankohta</div>
+      <label class="block">
+        <span class="block text-xs font-bold text-gray-400 mb-1">Päivämäärä ja aika</span>
+        <input id="event-datetime" type="datetime-local"
+          class="w-full rounded-2xl border-2 border-orange-100 px-3 py-2 text-sm font-semibold focus:border-orange-400 outline-none" />
+      </label>
+    </div>
+
+    <!-- Ajastimen nimi -->
+    <div class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+      <label class="block">
+        <span class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Ajastimen nimi</span>
+        <input id="timer-name" type="text" maxlength="80" required placeholder="Esim. Uunin paistoaika"
+          class="w-full rounded-2xl border-2 border-orange-100 px-3 py-2.5 text-sm font-bold focus:border-orange-400 outline-none" />
+      </label>
     </div>
 
     <!-- Näyttö + rengas -->
@@ -130,19 +150,13 @@
 
     <!-- Ohjaus -->
     <div class="flex flex-wrap gap-2 justify-center mb-4">
-      <button id="btn-start" type="button" class="px-6 py-3 rounded-full font-black text-white shadow-[0_4px_16px_rgba(234,88,12,0.35)] active:scale-95 transition-all bg-gradient-to-r from-orange-500 to-amber-500">
-        ▶ Aloita
-      </button>
-      <button id="btn-pause" type="button" disabled class="px-6 py-3 rounded-full font-black text-orange-800 bg-white border-2 border-orange-200 shadow-sm active:scale-95 transition-all disabled:opacity-40 disabled:pointer-events-none">
-        ⏸ Tauko
-      </button>
-      <button id="btn-reset" type="button" class="px-6 py-3 rounded-full font-black text-gray-600 bg-gray-100 border border-gray-200 active:scale-95 transition-all">
-        ↺ Nollaa
+      <button id="btn-start" type="button" class="px-8 py-3 rounded-full font-black text-white shadow-[0_4px_16px_rgba(234,88,12,0.35)] active:scale-95 transition-all bg-gradient-to-r from-orange-500 to-amber-500">
+        ▶ Käynnistä ajastin
       </button>
     </div>
 
-    <p class="text-center text-xs text-gray-400 font-medium">
-      Vinkki: salli ilmoitukset, niin saat muistutuksen myös toisella välilehdellä.
+    <p id="hint-notify" class="text-center text-xs text-gray-400 font-medium">
+      Ilmoitukset: salli ne, niin saat muistutuksen myös kun sovellus on taustalla tai suljettu (PWA / tuki riippuu laitteesta).
     </p>
   </div>
 
@@ -161,18 +175,19 @@
 <script>
 (function () {
   const RING_LEN = 2 * Math.PI * 88;
+  const MAX_TIMERS = 12;
 
   const display = document.getElementById('display');
   const sub = document.getElementById('sub');
   const statusEl = document.getElementById('status');
   const ring = document.getElementById('ring');
   const btnStart = document.getElementById('btn-start');
-  const btnPause = document.getElementById('btn-pause');
-  const btnReset = document.getElementById('btn-reset');
   const modeDuration = document.getElementById('mode-duration');
   const modeEvent = document.getElementById('mode-event');
+  const presetCard = document.getElementById('preset-card');
+  const durationCard = document.getElementById('duration-card');
   const eventCard = document.getElementById('event-card');
-  const eventName = document.getElementById('event-name');
+  const timerNameInput = document.getElementById('timer-name');
   const eventDatetime = document.getElementById('event-datetime');
   const inH = document.getElementById('in-h');
   const inM = document.getElementById('in-m');
@@ -183,221 +198,82 @@
   const btnDismiss = document.getElementById('btn-dismiss');
   const canvas = document.getElementById('confetti-canvas');
   const ctx = canvas.getContext('2d');
-  const savedList = document.getElementById('saved-list');
-  const savedEmpty = document.getElementById('saved-empty');
+  const activeBarWrap = document.getElementById('active-bar-wrap');
+  const activeTimersList = document.getElementById('active-timers-list');
+  const detailBackdrop = document.getElementById('detail-backdrop');
+  const detailPanel = document.getElementById('detail-panel');
+  const detailName = document.getElementById('detail-name');
+  const detailRemaining = document.getElementById('detail-remaining');
+  const detailEnds = document.getElementById('detail-ends');
+  const detailMode = document.getElementById('detail-mode');
+  const detailClose = document.getElementById('detail-close');
 
-  const STORAGE_KEY = 'countdown-saved-timers-v1';
-  const MAX_SAVED = 24;
+  /** @type {{ id: string, name: string, targetEndMs: number, mode: string, eventLabel: string, durationTotalMs: number }[]} */
+  let timers = [];
+  let selectedId = null;
+  let raf = null;
 
   let totalMs = 0;
   let remainingMs = 0;
-  let targetEnd = 0;
-  let raf = null;
-  let running = false;
-  let paused = false;
-  let currentTimerName = '';
   let mode = 'duration';
   let eventTargetMs = 0;
-  let eventLabel = '';
-  let savedTick = null;
 
-  function loadSavedTimers() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) {
-      return [];
+  function swPost(data) {
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      try {
+        navigator.serviceWorker.controller.postMessage(data);
+      } catch (e) {}
     }
   }
 
-  function persistSavedTimers(list) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-    } catch (e) {}
+  function syncAllToServiceWorker() {
+    swPost({ type: 'COUNTDOWN_SYNC_ALL', timers: timers.map((t) => ({ ...t })) });
   }
 
-  function defaultSavedName() {
-    if (mode === 'event') {
-      const n = eventName.value.trim();
-      if (n) return n;
-      const t = parseEventTargetMs();
-      return t ? `Tapahtuma ${formatEventTime(t)}` : 'Tapahtuma';
-    }
-    return 'Ajastin';
-  }
-
-  function remainingForSavedEntry(entry, now) {
-    if (entry.mode === 'event') {
-      const end = entry.targetMs;
-      if (!end || !Number.isFinite(end)) return 0;
-      return Math.max(0, end - now);
-    }
-    const sec = entry.durationSec;
-    if (!sec || !Number.isFinite(sec)) return 0;
-    return sec * 1000;
-  }
-
-  function sublineForSavedEntry(entry) {
-    if (entry.mode === 'event') {
-      const t = entry.targetMs;
-      return t && Number.isFinite(t) ? `Kohti ${formatEventTime(t)}` : 'Tapahtuma';
-    }
-    return 'Kesto';
-  }
-
-  function renderSavedTimers() {
-    const list = loadSavedTimers();
-    const now = Date.now();
-
-    if (list.length === 0) {
-      savedEmpty.classList.remove('hidden');
-      savedList.classList.add('hidden');
-      savedList.replaceChildren();
-      return;
-    }
-
-    savedEmpty.classList.add('hidden');
-    savedList.classList.remove('hidden');
-
-    const frag = document.createDocumentFragment();
-    list.forEach((entry) => {
-      const row = document.createElement('button');
-      row.type = 'button';
-      row.className = 'saved-row w-full rounded-2xl border-2 border-orange-100 bg-white/95 px-3 py-2.5 shadow-sm text-left active:scale-[0.99] transition-transform hover:border-orange-200 flex flex-wrap items-center gap-2';
-
-      const main = document.createElement('div');
-      main.className = 'min-w-0 flex-1';
-      const title = document.createElement('div');
-      title.className = 'font-bold text-sm text-gray-900 truncate';
-      title.textContent = entry.name || 'Ajastin';
-      title.title = entry.name || '';
-      const subEl = document.createElement('div');
-      subEl.className = 'text-[10px] font-semibold text-gray-400 mt-0.5 truncate';
-      subEl.textContent = sublineForSavedEntry(entry);
-      main.appendChild(title);
-      main.appendChild(subEl);
-
-      const timeEl = document.createElement('div');
-      timeEl.className = 'text-lg font-black tabular-nums shrink-0 text-right min-w-[4.5rem]';
-      const rem = remainingForSavedEntry(entry, now);
-      if (entry.mode === 'event' && rem <= 0) {
-        timeEl.textContent = '0:00';
-        timeEl.classList.add('text-gray-400');
-      } else {
-        timeEl.textContent = formatMs(rem);
-        timeEl.classList.add('text-orange-600');
-      }
-
-      const del = document.createElement('button');
-      del.type = 'button';
-      del.className = 'shrink-0 text-gray-400 hover:text-red-600 text-xl font-black leading-none px-1 rounded-lg';
-      del.setAttribute('aria-label', 'Poista tallenne');
-      del.textContent = '×';
-      del.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        const next = loadSavedTimers().filter(x => x.id !== entry.id);
-        persistSavedTimers(next);
-        renderSavedTimers();
-      });
-
-      row.appendChild(main);
-      row.appendChild(timeEl);
-      row.appendChild(del);
-
-      row.addEventListener('click', () => applySavedEntry(entry));
-      frag.appendChild(row);
+  function syncOneToServiceWorker(t) {
+    swPost({
+      type: 'COUNTDOWN_SYNC',
+      id: t.id,
+      name: t.name,
+      targetEndMs: t.targetEndMs,
+      mode: t.mode,
+      eventLabel: t.eventLabel || '',
+      durationTotalMs: t.durationTotalMs,
     });
-
-    savedList.replaceChildren(frag);
   }
 
-  function startSavedTicker() {
-    if (savedTick) return;
-    savedTick = setInterval(() => {
-      const anyEvent = loadSavedTimers().some(e => e.mode === 'event');
-      if (anyEvent) renderSavedTimers();
-    }, 1000);
+  function removeFromServiceWorker(id) {
+    swPost({ type: 'COUNTDOWN_REMOVE', id });
   }
 
-  function applySavedEntry(entry) {
-    if (running) return;
-    if (entry.mode === 'event') {
-      mode = 'event';
-      updateModeButtons();
-      eventName.value = entry.eventLabel || '';
-      if (entry.targetMs && Number.isFinite(entry.targetMs)) {
-        const d = new Date(entry.targetMs);
-        const pad2 = (n) => String(n).padStart(2, '0');
-        const local = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-        eventDatetime.value = local;
-      }
-      const nextTarget = parseEventTargetMs();
-      if (nextTarget) {
-        const left = Math.max(0, nextTarget - Date.now());
-        totalMs = left;
-        remainingMs = left;
-        refreshDisplay();
-        setStatus('Valmis', `Kohti: ${formatEventTime(nextTarget)}`);
-      } else {
-        setStatus('Valmis', '');
-      }
-    } else {
-      mode = 'duration';
-      updateModeButtons();
-      const sec = Math.min(99 * 3600 + 59 * 60 + 59, Math.max(0, Math.floor(entry.durationSec || 0)));
-      const h = Math.floor(sec / 3600);
-      const m = Math.floor((sec % 3600) / 60);
-      const s = sec % 60;
-      inH.value = h;
-      inM.value = m;
-      inS.value = s;
-      totalMs = sec * 1000;
-      remainingMs = totalMs;
-      refreshDisplay();
-      setStatus('Valmis', '');
-    }
-    setInputsEnabled(true);
+  function requestTimersFromServiceWorker() {
+    swPost({ type: 'COUNTDOWN_GET_ACTIVE' });
   }
 
-  function sameSnapshot(a, b) {
-    if (!a || !b || a.mode !== b.mode) return false;
-    if (a.mode === 'event') return a.targetMs === b.targetMs;
-    return a.durationSec === b.durationSec;
+  function newId() {
+    return (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   }
 
-  /** Tallenna nykyinen asetus käynnistyksessä (ei duplikaatteja samaan kohteeseen / kestoon). */
-  function persistSnapshotOnStart() {
-    let payload = null;
-    if (mode === 'event') {
-      const target = eventTargetMs;
-      if (!target || !Number.isFinite(target)) return;
-      const name = (eventName.value.trim() || defaultSavedName()).slice(0, 80);
-      payload = {
-        id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-        mode: 'event',
-        name,
-        targetMs: target,
-        eventLabel: eventName.value.trim()
-      };
-    } else {
-      const sec = Math.floor(totalMs / 1000);
-      if (sec <= 0) return;
-      const name = defaultSavedName().slice(0, 80);
-      payload = {
-        id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-        mode: 'duration',
-        name,
-        durationSec: sec
-      };
-    }
+  function getSelected() {
+    return timers.find((t) => t.id === selectedId) || null;
+  }
 
-    let list = loadSavedTimers().filter(x => !sameSnapshot(x, payload));
-    list.unshift(payload);
-    if (list.length > MAX_SAVED) list = list.slice(0, MAX_SAVED);
-    persistSavedTimers(list);
-    renderSavedTimers();
+  function remainingFor(t) {
+    return Math.max(0, t.targetEndMs - Date.now());
+  }
+
+  function notifyDoneForTimer(t) {
+    if (!t || !('Notification' in window) || Notification.permission !== 'granted') return;
+    if (document.visibilityState === 'visible') return;
+    try {
+      new Notification('Paras countdown-äppi ikinä', {
+        body: `${t.name || 'Ajastin'} — aika täynnä!`,
+        icon: 'icon.svg',
+        tag: `countdown-end-page-${t.id}`,
+      });
+    } catch (e) {}
   }
 
   function pad(n) {
@@ -425,11 +301,12 @@
   function formatEventTime(ts) {
     const d = new Date(ts);
     return d.toLocaleString('fi-FI', {
+      weekday: 'short',
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }
 
@@ -442,36 +319,55 @@
     return `${pad(m)}:${pad(s)}`;
   }
 
-  function updateRing() {
-    if (totalMs <= 0) {
+  function updateRingForSelection() {
+    const t = getSelected();
+    if (!t) {
       ring.style.strokeDasharray = String(RING_LEN);
       ring.style.strokeDashoffset = String(RING_LEN);
       return;
     }
-    const p = remainingMs / totalMs;
+    const rem = remainingFor(t);
+    const tot = t.durationTotalMs > 0 ? t.durationTotalMs : rem;
+    if (tot <= 0) {
+      ring.style.strokeDasharray = String(RING_LEN);
+      ring.style.strokeDashoffset = String(RING_LEN);
+      return;
+    }
+    const p = rem / tot;
     ring.style.strokeDasharray = String(RING_LEN);
-    ring.style.strokeDashoffset = String(RING_LEN * (1 - p));
+    ring.style.strokeDashoffset = String(RING_LEN * (1 - Math.min(1, Math.max(0, p))));
   }
 
-  function refreshDisplay() {
-    display.textContent = formatMs(remainingMs);
-    updateRing();
+  function refreshMainDisplay() {
+    const t = getSelected();
+    if (!t) {
+      display.textContent = formatMs(remainingMs);
+      updateRingForSelection();
+      return;
+    }
+    const rem = remainingFor(t);
+    display.textContent = formatMs(rem);
+    remainingMs = rem;
+    totalMs = t.durationTotalMs > 0 ? t.durationTotalMs : rem;
+    updateRingForSelection();
+    if (!detailPanel.classList.contains('hidden') && detailPanel.dataset.timerId === t.id) {
+      detailRemaining.textContent = formatMs(rem);
+      detailEnds.textContent = formatEventTime(t.targetEndMs);
+    }
+  }
+
+  function updateListRowTimes() {
+    activeTimersList.querySelectorAll('button[data-timer-id]').forEach((row) => {
+      const id = row.getAttribute('data-timer-id');
+      const t = timers.find((x) => x.id === id);
+      const tm = row.querySelector('.timer-row-time');
+      if (t && tm) tm.textContent = formatMs(remainingFor(t));
+    });
   }
 
   function setStatus(text, subText) {
     statusEl.textContent = text;
     sub.textContent = subText || '';
-  }
-
-  function setInputsEnabled(on) {
-    inH.disabled = !on;
-    inM.disabled = !on;
-    inS.disabled = !on;
-    eventName.disabled = !on;
-    eventDatetime.disabled = !on;
-    document.querySelectorAll('.preset').forEach(b => { b.disabled = !on || mode !== 'duration'; });
-    modeDuration.disabled = !on;
-    modeEvent.disabled = !on;
   }
 
   function updateModeButtons() {
@@ -483,17 +379,36 @@
       ? 'px-4 py-2 rounded-2xl text-sm font-bold border-2 border-orange-300 bg-orange-100 text-orange-800 active:scale-95 transition-transform'
       : 'px-4 py-2 rounded-2xl text-sm font-bold border-2 border-gray-200 bg-white text-gray-600 active:scale-95 transition-transform';
     eventCard.classList.toggle('hidden', durationOn);
+    presetCard.classList.toggle('hidden', !durationOn);
+    durationCard.classList.toggle('hidden', !durationOn);
+    document.querySelectorAll('.preset').forEach(b => { b.disabled = mode !== 'duration'; });
+  }
+
+  function applyFormPreviewFromMode() {
+    if (mode === 'duration') {
+      totalMs = parseInputs();
+      remainingMs = totalMs;
+      setStatus('Valmis', timers.length ? `${timers.length} ajastinta käynnissä` : '');
+    } else {
+      const nextTarget = parseEventTargetMs();
+      if (nextTarget) {
+        const left = Math.max(0, nextTarget - Date.now());
+        totalMs = left;
+        remainingMs = left;
+        setStatus('Valmis', `Kohti: ${formatEventTime(nextTarget)}`);
+      } else {
+        totalMs = 0;
+        remainingMs = 0;
+        setStatus('Valmis', timers.length ? `${timers.length} ajastinta käynnissä` : 'Valitse tapahtuman aika');
+      }
+    }
+    refreshMainDisplay();
   }
 
   function switchMode(nextMode) {
-    if (running) return;
     mode = nextMode;
     updateModeButtons();
-    totalMs = parseInputs();
-    remainingMs = totalMs;
-    refreshDisplay();
-    setStatus('Valmis', '');
-    setInputsEnabled(true);
+    applyFormPreviewFromMode();
   }
 
   function stopLoop() {
@@ -501,15 +416,106 @@
     raf = null;
   }
 
-  function tick() {
-    if (!running || paused) return;
-    remainingMs = Math.max(0, targetEnd - Date.now());
-    refreshDisplay();
-    if (remainingMs <= 0) {
-      finish();
+  function showTopBar(show) {
+    activeBarWrap.classList.toggle('hidden', !show);
+    document.body.classList.toggle('has-active-timer', show);
+  }
+
+  function renderTimerList() {
+    activeTimersList.replaceChildren();
+    if (timers.length === 0) {
+      showTopBar(false);
       return;
     }
+    showTopBar(true);
+    const frag = document.createDocumentFragment();
+    const sorted = [...timers].sort((a, b) => a.targetEndMs - b.targetEndMs);
+    sorted.forEach((t) => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left active:bg-orange-50/90 transition-colors';
+      row.setAttribute('data-timer-id', t.id);
+      if (t.id === selectedId) row.classList.add('bg-orange-50/70');
+      const left = document.createElement('div');
+      left.className = 'min-w-0 flex-1';
+      const nm = document.createElement('div');
+      nm.className = 'text-xs font-bold text-gray-600 truncate';
+      nm.textContent = t.name;
+      const tm = document.createElement('div');
+      tm.className = 'timer-row-time text-base font-black tabular-nums text-orange-600 leading-tight';
+      tm.textContent = formatMs(remainingFor(t));
+      left.appendChild(nm);
+      left.appendChild(tm);
+      const chev = document.createElement('span');
+      chev.className = 'text-xs font-bold text-orange-400 shrink-0';
+      chev.textContent = '›';
+      row.appendChild(left);
+      row.appendChild(chev);
+      row.addEventListener('click', () => openDetailFor(t.id));
+      frag.appendChild(row);
+    });
+    activeTimersList.appendChild(frag);
+  }
+
+  function openDetailFor(id) {
+    const t = timers.find((x) => x.id === id);
+    if (!t) return;
+    selectedId = id;
+    renderTimerList();
+    detailPanel.dataset.timerId = id;
+    detailName.textContent = t.name;
+    detailRemaining.textContent = formatMs(remainingFor(t));
+    detailEnds.textContent = formatEventTime(t.targetEndMs);
+    detailMode.textContent = t.mode === 'event'
+      ? 'Tapahtuma-aikaan'
+      : `Alkuperäinen kesto ${formatMs(t.durationTotalMs > 0 ? t.durationTotalMs : remainingFor(t))}`;
+    detailBackdrop.classList.remove('hidden');
+    detailPanel.classList.remove('hidden');
+  }
+
+  function closeDetail() {
+    detailBackdrop.classList.add('hidden');
+    detailPanel.classList.add('hidden');
+    delete detailPanel.dataset.timerId;
+  }
+
+  function showCelebrationBatch(items) {
+    if (!items || items.length === 0) return;
+    const first = items[0];
+    celebrateTitle.textContent = items.length === 1
+      ? ((first.name && first.name.trim()) || 'Ajastin')
+      : `${items.length} ajastinta`;
+    celebrateDefault.classList.remove('hidden');
+    celebrateDefault.textContent = items.length > 1
+      ? `${items.length} ajastinta päättyi.`
+      : 'Hienoa — saavutit mitän asettamasi.';
+    overlay.classList.remove('hidden');
+    overlay.classList.add('flex');
+    playFanfare();
+    if (navigator.vibrate) navigator.vibrate([80, 50, 80, 50, 120]);
+    confettiBurst();
+  }
+
+  function tick() {
+    if (timers.length === 0) {
+      stopLoop();
+      return;
+    }
+    const now = Date.now();
+    const done = timers.filter((t) => t.targetEndMs <= now);
+    if (done.length) {
+      const ids = done.map((t) => t.id);
+      done.forEach((t) => notifyDoneForTimer(t));
+      showCelebrationBatch(done);
+      removeEndedByIds(ids);
+    }
+    updateListRowTimes();
+    refreshMainDisplay();
     raf = requestAnimationFrame(tick);
+  }
+
+  function ensureTickLoop() {
+    if (!raf && timers.length) raf = requestAnimationFrame(tick);
   }
 
   function playFanfare() {
@@ -586,54 +592,22 @@
     requestAnimationFrame(step);
   }
 
-  function notifyDone() {
-    if (!('Notification' in window) || Notification.permission !== 'granted') return;
-    try {
-      new Notification('Paras countdown-äppi ikinä', { body: `${currentTimerName || 'Ajastin'} — aika täynnä!`, icon: 'icon.svg' });
-    } catch (e) {}
-  }
-
-  function finish() {
-    running = false;
-    paused = false;
-    stopLoop();
-    remainingMs = 0;
-    refreshDisplay();
-    setStatus('Valmis', '');
-    btnStart.disabled = false;
-    btnStart.textContent = '▶ Aloita uudelleen';
-    btnPause.disabled = true;
-    setInputsEnabled(true);
-
-    playFanfare();
-    if (navigator.vibrate) navigator.vibrate([80, 50, 80, 50, 120]);
-    confettiBurst();
-    notifyDone();
-
-    celebrateTitle.textContent = (currentTimerName && currentTimerName.trim()) || 'Ajastin';
-    celebrateDefault.classList.remove('hidden');
-    overlay.classList.remove('hidden');
-    overlay.classList.add('flex');
-  }
-
   function start() {
-    if (running && !paused) return;
-    if (paused) {
-      paused = false;
-      targetEnd = Date.now() + remainingMs;
-      if (mode === 'event') {
-        const text = eventLabel
-          ? `${eventLabel} • ${formatEventTime(targetEnd)}`
-          : `Kohti: ${formatEventTime(targetEnd)}`;
-        setStatus('Käynnissä', text);
-      } else {
-        setStatus('Käynnissä', 'Jäljellä');
-      }
-      btnStart.textContent = '▶ Käynnissä';
-      btnPause.disabled = false;
-      tick();
+    const name = timerNameInput.value.trim();
+    if (!name) {
+      setStatus('Puuttuu', 'Anna ajastimelle nimi');
+      timerNameInput.focus();
       return;
     }
+    if (timers.length >= MAX_TIMERS) {
+      setStatus('Raja', `Enintään ${MAX_TIMERS} ajastinta`);
+      return;
+    }
+
+    let durationTotalMs = 0;
+    let targetEnd = 0;
+    let tMode = mode;
+    let eventLabel = '';
 
     if (mode === 'event') {
       const parsedTarget = parseEventTargetMs();
@@ -646,82 +620,89 @@
         setStatus('Virhe', 'Tapahtuma-aika on jo mennyt');
         return;
       }
-      eventTargetMs = parsedTarget;
-      eventLabel = eventName.value.trim();
-      totalMs = parsedTarget - now;
+      targetEnd = parsedTarget;
+      durationTotalMs = parsedTarget - now;
     } else {
-      totalMs = parseInputs();
-      eventTargetMs = 0;
-      eventLabel = '';
+      const dur = parseInputs();
+      if (dur <= 0) {
+        setStatus('Virhe', 'Aseta vähintään yksi sekunti');
+        return;
+      }
+      durationTotalMs = dur;
+      targetEnd = Date.now() + dur;
     }
 
-    if (totalMs <= 0) {
-      setStatus('Virhe', 'Aseta vähintään yksi sekunti');
-      return;
-    }
+    const rec = {
+      id: newId(),
+      name: name.slice(0, 80),
+      targetEndMs: targetEnd,
+      mode: tMode,
+      eventLabel,
+      durationTotalMs,
+    };
+    timers.push(rec);
+    selectedId = rec.id;
+    ensureSelectedId();
+    syncOneToServiceWorker(rec);
+    renderTimerList();
+    applyFormPreviewFromMode();
+    ensureTickLoop();
 
-    currentTimerName = defaultSavedName();
-    persistSnapshotOnStart();
-    remainingMs = totalMs;
-    running = true;
-    paused = false;
-    targetEnd = mode === 'event' ? eventTargetMs : Date.now() + totalMs;
-    setInputsEnabled(false);
-    if (mode === 'event') {
-      const text = eventLabel
-        ? `${eventLabel} • ${formatEventTime(targetEnd)}`
-        : `Kohti: ${formatEventTime(targetEnd)}`;
-      setStatus('Käynnissä', text);
-    } else {
-      setStatus('Käynnissä', 'Jäljellä');
-    }
-    btnStart.disabled = true;
-    btnStart.textContent = '▶ Käynnissä';
-    btnPause.disabled = false;
-    refreshDisplay();
-    tick();
+    timerNameInput.value = '';
+    setStatus('Lisätty', `${timers.length} ajastinta — voit käynnistää uuden`);
 
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().catch(() => {});
     }
   }
 
-  function pause() {
-    if (!running || paused) return;
-    paused = true;
-    stopLoop();
-    remainingMs = Math.max(0, targetEnd - Date.now());
-    refreshDisplay();
-    setStatus('Tauolla', mode === 'event' ? `Kohti: ${formatEventTime(targetEnd)}` : 'Jatka kun olet valmis');
-    btnStart.disabled = false;
-    btnStart.textContent = '▶ Jatka';
-    btnPause.disabled = true;
+  function removeEndedByIds(ids) {
+    const set = new Set(ids);
+    const closedId = detailPanel.dataset.timerId;
+    if (closedId && set.has(closedId)) closeDetail();
+    timers = timers.filter((t) => !set.has(t.id));
+    ensureSelectedId();
+    syncAllToServiceWorker();
+    renderTimerList();
+    refreshMainDisplay();
+    applyFormPreviewFromMode();
+    if (timers.length === 0) stopLoop();
   }
 
-  function reset() {
-    stopLoop();
-    running = false;
-    paused = false;
-    totalMs = parseInputs();
-    remainingMs = totalMs;
-    currentTimerName = '';
-    eventTargetMs = 0;
-    eventLabel = '';
-    refreshDisplay();
-    setStatus('Valmis', '');
-    btnStart.disabled = false;
-    btnStart.textContent = '▶ Aloita';
-    btnPause.disabled = true;
-    setInputsEnabled(true);
-    overlay.classList.add('hidden');
-    overlay.classList.remove('flex');
+  function mergeRestoredTimers(incoming) {
+    if (!Array.isArray(incoming) || incoming.length === 0) return;
+    const valid = incoming.filter((t) => t && t.id && t.targetEndMs > Date.now());
+    if (valid.length === 0) return;
+    const byId = new Map(timers.map((t) => [t.id, t]));
+    valid.forEach((t) => byId.set(t.id, { ...t }));
+    timers = Array.from(byId.values()).filter((t) => t.targetEndMs > Date.now());
+    if (!selectedId || !timers.some((x) => x.id === selectedId)) {
+      const sorted = [...timers].sort((a, b) => a.targetEndMs - b.targetEndMs);
+      selectedId = sorted[0] ? sorted[0].id : null;
+    }
+    renderTimerList();
+    applyFormPreviewFromMode();
+    ensureTickLoop();
+    syncAllToServiceWorker();
+  }
+
+  function ensureSelectedId() {
+    if (timers.length === 0) {
+      selectedId = null;
+      return;
+    }
+    if (!selectedId || !timers.some((x) => x.id === selectedId)) {
+      const sorted = [...timers].sort((a, b) => a.targetEndMs - b.targetEndMs);
+      selectedId = sorted[0].id;
+    }
   }
 
   btnStart.addEventListener('click', start);
-  btnPause.addEventListener('click', pause);
-  btnReset.addEventListener('click', reset);
   modeDuration.addEventListener('click', () => switchMode('duration'));
   modeEvent.addEventListener('click', () => switchMode('event'));
+
+  detailClose.addEventListener('click', closeDetail);
+  detailBackdrop.addEventListener('click', closeDetail);
 
   btnDismiss.addEventListener('click', () => {
     overlay.classList.add('hidden');
@@ -730,7 +711,7 @@
 
   document.querySelectorAll('.preset').forEach(btn => {
     btn.addEventListener('click', () => {
-      if (running && !paused) return;
+      if (mode !== 'duration') return;
       const sec = parseInt(btn.getAttribute('data-preset'), 10);
       const h = Math.floor(sec / 3600);
       const m = Math.floor((sec % 3600) / 60);
@@ -738,49 +719,71 @@
       inH.value = h;
       inM.value = m;
       inS.value = s;
-      totalMs = sec * 1000;
-      remainingMs = totalMs;
-      refreshDisplay();
-      setStatus('Valmis', '');
+      applyFormPreviewFromMode();
     });
   });
 
   [inH, inM, inS].forEach(el => {
     el.addEventListener('change', () => {
-      if (running) return;
-      totalMs = parseInputs();
-      remainingMs = totalMs;
-      refreshDisplay();
+      if (mode === 'duration') applyFormPreviewFromMode();
     });
   });
 
   eventDatetime.addEventListener('change', () => {
-    if (running || mode !== 'event') return;
-    const nextTarget = parseEventTargetMs();
-    if (!nextTarget) {
-      setStatus('Valmis', '');
-      return;
-    }
-    const left = Math.max(0, nextTarget - Date.now());
-    totalMs = left;
-    remainingMs = left;
-    refreshDisplay();
-    setStatus('Valmis', `Kohti: ${formatEventTime(nextTarget)}`);
+    if (mode === 'event') applyFormPreviewFromMode();
   });
 
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) renderSavedTimers();
+    if (!document.hidden && timers.length) {
+      const now = Date.now();
+      const done = timers.filter((t) => t.targetEndMs <= now);
+      if (done.length) {
+        const ids = done.map((t) => t.id);
+        done.forEach((t) => notifyDoneForTimer(t));
+        showCelebrationBatch(done);
+        removeEndedByIds(ids);
+      } else {
+        renderTimerList();
+        refreshMainDisplay();
+      }
+    }
   });
 
   window.addEventListener('resize', () => { if (!overlay.classList.contains('hidden')) resizeCanvas(); });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (ev) => {
+      const d = ev.data;
+      if (!d || typeof d !== 'object') return;
+      if (d.type === 'COUNTDOWN_ENDED_BATCH' && Array.isArray(d.ended) && d.ended.length) {
+        const ids = new Set(d.ended.map((x) => x.id).filter(Boolean));
+        const hadAny = timers.some((t) => ids.has(t.id));
+        if (hadAny) {
+          showCelebrationBatch(d.ended.map((x) => ({ name: x.name, id: x.id })));
+        }
+        removeEndedByIds([...ids]);
+      }
+      if (d.type === 'COUNTDOWN_ACTIVE_STATE' && Array.isArray(d.timers)) {
+        mergeRestoredTimers(d.timers);
+      }
+    });
+
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      reg.update();
+      const askRestore = () => requestTimersFromServiceWorker();
+      if (navigator.serviceWorker.controller) {
+        askRestore();
+      } else {
+        navigator.serviceWorker.addEventListener('controllerchange', () => askRestore(), { once: true });
+      }
+    }).catch(() => {});
+  }
 
   totalMs = parseInputs();
   remainingMs = totalMs;
   ring.style.strokeDasharray = String(RING_LEN);
   updateModeButtons();
-  refreshDisplay();
-  renderSavedTimers();
-  startSavedTicker();
+  applyFormPreviewFromMode();
 })();
 </script>
 </body>

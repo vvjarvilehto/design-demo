@@ -43,6 +43,19 @@
       <p class="text-gray-500 font-semibold text-sm mt-1">Aseta aika, aloita — lopussa juhla</p>
     </header>
 
+    <!-- Tallennetut ajastimet (localStorage, PWA) -->
+    <div id="saved-section" class="mb-4">
+      <div class="flex items-center justify-between gap-2 mb-2 px-1">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Tallennetut</div>
+        <button id="btn-save-timer" type="button"
+          class="shrink-0 px-3 py-1.5 rounded-full text-xs font-black bg-white border-2 border-orange-200 text-orange-800 shadow-sm active:scale-95 transition-transform disabled:opacity-40 disabled:pointer-events-none">
+          + Tallenna nykyinen
+        </button>
+      </div>
+      <p id="saved-empty" class="text-center text-xs text-gray-400 font-medium py-2 px-2">Ei tallennettuja — valitse asetukset ja paina &quot;Tallenna nykyinen&quot;.</p>
+      <div id="saved-list" class="hidden flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory scroll-smooth" style="-webkit-overflow-scrolling: touch;"></div>
+    </div>
+
     <!-- Esiasetukset -->
     <div class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
       <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pikavalinnat</div>
@@ -197,6 +210,12 @@
   const btnDismiss = document.getElementById('btn-dismiss');
   const canvas = document.getElementById('confetti-canvas');
   const ctx = canvas.getContext('2d');
+  const savedList = document.getElementById('saved-list');
+  const savedEmpty = document.getElementById('saved-empty');
+  const btnSaveTimer = document.getElementById('btn-save-timer');
+
+  const STORAGE_KEY = 'countdown-saved-timers-v1';
+  const MAX_SAVED = 24;
 
   let totalMs = 0;
   let remainingMs = 0;
@@ -208,6 +227,227 @@
   let mode = 'duration';
   let eventTargetMs = 0;
   let eventLabel = '';
+  let savedTick = null;
+
+  function loadSavedTimers() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function persistSavedTimers(list) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    } catch (e) {}
+  }
+
+  function defaultSavedName() {
+    if (mode === 'event') {
+      const n = eventName.value.trim();
+      if (n) return n;
+      const t = parseEventTargetMs();
+      return t ? `Tapahtuma ${formatEventTime(t)}` : 'Tapahtuma';
+    }
+    return 'Ajastin';
+  }
+
+  function remainingForSavedEntry(entry, now) {
+    if (entry.mode === 'event') {
+      const end = entry.targetMs;
+      if (!end || !Number.isFinite(end)) return 0;
+      return Math.max(0, end - now);
+    }
+    const sec = entry.durationSec;
+    if (!sec || !Number.isFinite(sec)) return 0;
+    return sec * 1000;
+  }
+
+  function sublineForSavedEntry(entry) {
+    if (entry.mode === 'event') {
+      const t = entry.targetMs;
+      return t && Number.isFinite(t) ? `Kohti ${formatEventTime(t)}` : 'Tapahtuma';
+    }
+    return 'Kesto (aloita alla)';
+  }
+
+  function renderSavedTimers() {
+    const list = loadSavedTimers();
+    const now = Date.now();
+
+    if (list.length === 0) {
+      savedEmpty.classList.remove('hidden');
+      savedList.classList.add('hidden');
+      savedList.replaceChildren();
+      return;
+    }
+
+    savedEmpty.classList.add('hidden');
+    savedList.classList.remove('hidden');
+
+    const frag = document.createDocumentFragment();
+    list.forEach((entry) => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'saved-card snap-start shrink-0 w-[min(85vw,240px)] rounded-2xl border-2 border-orange-100 bg-white/95 p-3 shadow-sm text-left active:scale-[0.98] transition-transform hover:border-orange-200';
+
+      const top = document.createElement('div');
+      top.className = 'flex justify-between items-start gap-1';
+      const title = document.createElement('div');
+      title.className = 'font-bold text-sm text-gray-900 truncate min-w-0';
+      title.textContent = entry.name || 'Ajastin';
+      title.title = entry.name || '';
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'shrink-0 text-gray-400 hover:text-red-600 text-xl font-black leading-none px-1 rounded-lg';
+      del.setAttribute('aria-label', 'Poista tallenne');
+      del.textContent = '×';
+      del.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const next = loadSavedTimers().filter(x => x.id !== entry.id);
+        persistSavedTimers(next);
+        renderSavedTimers();
+      });
+      top.appendChild(title);
+      top.appendChild(del);
+
+      const timeEl = document.createElement('div');
+      timeEl.className = 'text-2xl font-black tabular-nums mt-1';
+      const rem = remainingForSavedEntry(entry, now);
+      if (entry.mode === 'event' && rem <= 0) {
+        timeEl.textContent = '0:00';
+        timeEl.classList.add('text-gray-400');
+      } else {
+        timeEl.textContent = formatMs(rem);
+        timeEl.classList.add('text-orange-600');
+      }
+
+      const subEl = document.createElement('div');
+      subEl.className = 'text-[10px] font-semibold text-gray-400 mt-0.5';
+      subEl.textContent = sublineForSavedEntry(entry);
+
+      row.appendChild(top);
+      row.appendChild(timeEl);
+      row.appendChild(subEl);
+
+      row.addEventListener('click', () => applySavedEntry(entry));
+      frag.appendChild(row);
+    });
+
+    savedList.replaceChildren(frag);
+  }
+
+  function startSavedTicker() {
+    if (savedTick) return;
+    savedTick = setInterval(() => {
+      const anyEvent = loadSavedTimers().some(e => e.mode === 'event');
+      if (anyEvent) renderSavedTimers();
+    }, 1000);
+  }
+
+  function applySavedEntry(entry) {
+    if (running) return;
+    if (entry.mode === 'event') {
+      mode = 'event';
+      updateModeButtons();
+      eventName.value = entry.eventLabel || '';
+      if (entry.targetMs && Number.isFinite(entry.targetMs)) {
+        const d = new Date(entry.targetMs);
+        const pad2 = (n) => String(n).padStart(2, '0');
+        const local = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+        eventDatetime.value = local;
+      }
+      const nextTarget = parseEventTargetMs();
+      if (nextTarget) {
+        const left = Math.max(0, nextTarget - Date.now());
+        totalMs = left;
+        remainingMs = left;
+        refreshDisplay();
+        setStatus('Valmis', `Kohti: ${formatEventTime(nextTarget)}`);
+      } else {
+        setStatus('Valmis', '');
+      }
+    } else {
+      mode = 'duration';
+      updateModeButtons();
+      const sec = Math.min(99 * 3600 + 59 * 60 + 59, Math.max(0, Math.floor(entry.durationSec || 0)));
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      inH.value = h;
+      inM.value = m;
+      inS.value = s;
+      totalMs = sec * 1000;
+      remainingMs = totalMs;
+      refreshDisplay();
+      setStatus('Valmis', '');
+    }
+    setInputsEnabled(true);
+  }
+
+  function saveCurrentAsPreset() {
+    if (running) return;
+    let payload = null;
+    if (mode === 'event') {
+      const target = parseEventTargetMs();
+      if (!target) {
+        setStatus('Virhe', 'Valitse tapahtuman päivämäärä ennen tallennusta');
+        return;
+      }
+      if (target <= Date.now()) {
+        setStatus('Virhe', 'Tapahtuma on jo mennyt — ei voi tallentaa');
+        return;
+      }
+      const name = (eventName.value.trim() || defaultSavedName()).slice(0, 80);
+      payload = {
+        id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        mode: 'event',
+        name,
+        targetMs: target,
+        eventLabel: eventName.value.trim()
+      };
+    } else {
+      const sec = Math.floor(parseInputs() / 1000);
+      if (sec <= 0) {
+        setStatus('Virhe', 'Aseta kesto ennen tallennusta');
+        return;
+      }
+      const name = defaultSavedName().slice(0, 80);
+      payload = {
+        id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        mode: 'duration',
+        name,
+        durationSec: sec
+      };
+    }
+
+    const list = loadSavedTimers();
+    if (list.length >= MAX_SAVED) {
+      setStatus('Virhe', `Enintään ${MAX_SAVED} tallennettua`);
+      return;
+    }
+    list.unshift(payload);
+    persistSavedTimers(list);
+    renderSavedTimers();
+    setStatus('Valmis', 'Tallennettu');
+  }
+
+  function updateSaveButtonState() {
+    let can = !running;
+    if (can) {
+      if (mode === 'event') {
+        const t = parseEventTargetMs();
+        can = !!(t && t > Date.now());
+      } else {
+        can = parseInputs() > 0;
+      }
+    }
+    btnSaveTimer.disabled = !can;
+  }
 
   function pad(n) {
     return String(Math.max(0, Math.floor(n))).padStart(2, '0');
@@ -282,6 +522,7 @@
     document.querySelectorAll('.preset').forEach(b => { b.disabled = !on || mode !== 'duration'; });
     modeDuration.disabled = !on;
     modeEvent.disabled = !on;
+    updateSaveButtonState();
   }
 
   function updateModeButtons() {
@@ -528,6 +769,8 @@
     overlay.classList.remove('flex');
   }
 
+  btnSaveTimer.addEventListener('click', saveCurrentAsPreset);
+
   btnStart.addEventListener('click', start);
   btnPause.addEventListener('click', pause);
   btnReset.addEventListener('click', reset);
@@ -553,6 +796,7 @@
       remainingMs = totalMs;
       refreshDisplay();
       setStatus('Valmis', '');
+      updateSaveButtonState();
     });
   });
 
@@ -562,6 +806,7 @@
       totalMs = parseInputs();
       remainingMs = totalMs;
       refreshDisplay();
+      updateSaveButtonState();
     });
   });
 
@@ -570,6 +815,7 @@
     const nextTarget = parseEventTargetMs();
     if (!nextTarget) {
       setStatus('Valmis', '');
+      updateSaveButtonState();
       return;
     }
     const left = Math.max(0, nextTarget - Date.now());
@@ -577,6 +823,13 @@
     remainingMs = left;
     refreshDisplay();
     setStatus('Valmis', `Kohti: ${formatEventTime(nextTarget)}`);
+    updateSaveButtonState();
+  });
+
+  eventName.addEventListener('input', () => { if (!running) updateSaveButtonState(); });
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) renderSavedTimers();
   });
 
   window.addEventListener('resize', () => { if (!overlay.classList.contains('hidden')) resizeCanvas(); });
@@ -586,6 +839,9 @@
   ring.style.strokeDasharray = String(RING_LEN);
   updateModeButtons();
   refreshDisplay();
+  renderSavedTimers();
+  startSavedTicker();
+  updateSaveButtonState();
 })();
 </script>
 </body>

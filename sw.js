@@ -1,4 +1,4 @@
-const CACHE = 'tietovisa-v10';
+const CACHE = 'tietovisa-v11';
 
 const PRECACHE = [
   './',

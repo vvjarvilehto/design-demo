@@ -9,8 +9,20 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: 'Nunito', sans-serif; }
+    html { overflow-x: hidden; }
+    body { font-family: 'Nunito', sans-serif; overflow-x: hidden; }
     body.has-active-timer { padding-top: min(40vh, 11rem); }
+    .preset--active {
+      border-color: #ea580c !important;
+      background-color: #ffedd5 !important;
+      color: #9a3412 !important;
+      box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.4);
+    }
+    input[type="datetime-local"] {
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
     #ring {
       transform: rotate(-90deg);
       transition: stroke-dashoffset 0.35s ease;
@@ -38,8 +50,8 @@
   <canvas id="confetti-canvas" aria-hidden="true"></canvas>
 
   <!-- Käynnissä: ajastimet listana -->
-  <div id="active-bar-wrap" class="hidden fixed top-0 left-0 right-0 z-[60] bg-white/95 border-b border-orange-100 backdrop-blur-sm" role="region" aria-label="Käynnissä olevat ajastimet">
-    <div class="max-h-[min(40vh,220px)] overflow-y-auto overscroll-contain">
+  <div id="active-bar-wrap" class="hidden fixed top-0 left-0 right-0 z-[60] max-w-[100vw] overflow-x-hidden bg-white/95 border-b border-orange-100 backdrop-blur-sm" role="region" aria-label="Käynnissä olevat ajastimet">
+    <div class="max-h-[min(40vh,220px)] min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain">
       <div id="active-timers-list" class="divide-y divide-orange-50"></div>
     </div>
   </div>
@@ -58,7 +70,7 @@
     </button>
   </div>
 
-  <div class="max-w-md mx-auto relative z-10">
+  <div class="w-full max-w-md mx-auto relative z-10 min-w-0">
     <a href="index.html" class="inline-flex items-center gap-1 text-sm font-semibold text-orange-400 hover:text-orange-600 mb-3 transition-colors">
       ‹ Etusivulle
     </a>
@@ -114,12 +126,12 @@
     </div>
 
     <!-- Tapahtuma-aika -->
-    <div id="event-card" class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hidden">
+    <div id="event-card" class="rounded-3xl p-4 mb-4 bg-white/90 border border-orange-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hidden min-w-0 overflow-hidden">
       <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Tapahtuman ajankohta</div>
-      <label class="block">
+      <label class="block min-w-0">
         <span class="block text-xs font-bold text-gray-400 mb-1">Päivämäärä ja aika</span>
         <input id="event-datetime" type="datetime-local"
-          class="w-full rounded-2xl border-2 border-orange-100 px-3 py-2 text-sm font-semibold focus:border-orange-400 outline-none" />
+          class="w-full min-w-0 max-w-full rounded-2xl border-2 border-orange-100 px-3 py-2 text-sm font-semibold focus:border-orange-400 outline-none" />
       </label>
     </div>
 
@@ -384,6 +396,22 @@
     document.querySelectorAll('.preset').forEach(b => { b.disabled = mode !== 'duration'; });
   }
 
+  /** Korostaa pikavalintaa, jos T/Min/Sek vastaa sitä (vain kestotila). */
+  function updatePresetHighlight() {
+    document.querySelectorAll('.preset').forEach((btn) => {
+      if (mode !== 'duration') {
+        btn.classList.remove('preset--active');
+        return;
+      }
+      const presetSec = parseInt(btn.getAttribute('data-preset'), 10);
+      const h = Math.min(99, Math.max(0, parseInt(inH.value, 10) || 0));
+      const m = Math.min(59, Math.max(0, parseInt(inM.value, 10) || 0));
+      const s = Math.min(59, Math.max(0, parseInt(inS.value, 10) || 0));
+      const totalSec = h * 3600 + m * 60 + s;
+      btn.classList.toggle('preset--active', Number.isFinite(presetSec) && totalSec > 0 && totalSec === presetSec);
+    });
+  }
+
   function applyFormPreviewFromMode() {
     if (mode === 'duration') {
       totalMs = parseInputs();
@@ -403,6 +431,7 @@
       }
     }
     refreshMainDisplay();
+    updatePresetHighlight();
   }
 
   function switchMode(nextMode) {
@@ -433,7 +462,7 @@
     sorted.forEach((t) => {
       const row = document.createElement('button');
       row.type = 'button';
-      row.className = 'w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left active:bg-orange-50/90 transition-colors';
+      row.className = 'w-full min-w-0 flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 text-left active:bg-orange-50/90 transition-colors';
       row.setAttribute('data-timer-id', t.id);
       if (t.id === selectedId) row.classList.add('bg-orange-50/70');
       const left = document.createElement('div');
@@ -442,7 +471,7 @@
       nm.className = 'text-xs font-bold text-gray-600 truncate';
       nm.textContent = t.name;
       const tm = document.createElement('div');
-      tm.className = 'timer-row-time text-base font-black tabular-nums text-orange-600 leading-tight';
+      tm.className = 'timer-row-time shrink-0 text-base font-black tabular-nums text-orange-600 leading-tight whitespace-nowrap';
       tm.textContent = formatMs(remainingFor(t));
       left.appendChild(nm);
       left.appendChild(tm);

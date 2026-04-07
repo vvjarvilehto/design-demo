@@ -1,12 +1,21 @@
-const CACHE = 'tietovisa-v13';
+const CACHE = 'tietovisa-v14';
 
 const COUNTDOWN_DB = 'perhepakki-countdown';
-const COUNTDOWN_DB_VER = 1;
+const COUNTDOWN_DB_VER = 2;
 const COUNTDOWN_STORE = 'timers';
+const COUNTDOWN_TIMERS_KEY = 'timers';
+const COUNTDOWN_LEGACY_ACTIVE_KEY = 'active';
 const COUNTDOWN_WAKE_CHUNK_MS = 5 * 60 * 1000;
 
 let countdownAlarmTimer = null;
 let countdownFetchCheckAt = 0;
+
+function countdownClearAlarmTimer() {
+  if (countdownAlarmTimer) {
+    clearTimeout(countdownAlarmTimer);
+    countdownAlarmTimer = null;
+  }
+}
 
 function countdownOpenDb() {
   return new Promise((resolve, reject) => {
@@ -18,45 +27,63 @@ function countdownOpenDb() {
       if (!db.objectStoreNames.contains(COUNTDOWN_STORE)) {
         db.createObjectStore(COUNTDOWN_STORE);
       }
+      if (e.oldVersion < 2 && e.oldVersion >= 1) {
+        const tx = e.target.transaction;
+        const store = tx.objectStore(COUNTDOWN_STORE);
+        const g = store.get(COUNTDOWN_LEGACY_ACTIVE_KEY);
+        g.onsuccess = () => {
+          const active = g.result;
+          if (active && active.targetEndMs) {
+            const withId = active.id
+              ? active
+              : { ...active, id: `m-${active.targetEndMs}` };
+            store.put([withId], COUNTDOWN_TIMERS_KEY);
+          }
+          store.delete(COUNTDOWN_LEGACY_ACTIVE_KEY);
+        };
+      }
     };
   });
 }
 
-async function countdownIdbPutActive(rec) {
-  const db = await countdownOpenDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(COUNTDOWN_STORE, 'readwrite');
-    tx.objectStore(COUNTDOWN_STORE).put(rec, 'active');
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-async function countdownIdbGetActive() {
+async function countdownIdbGetTimers() {
   const db = await countdownOpenDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(COUNTDOWN_STORE, 'readonly');
-    const r = tx.objectStore(COUNTDOWN_STORE).get('active');
-    r.onsuccess = () => resolve(r.result || null);
+    const r = tx.objectStore(COUNTDOWN_STORE).get(COUNTDOWN_TIMERS_KEY);
+    r.onsuccess = () => {
+      const list = r.result;
+      resolve(Array.isArray(list) ? list : []);
+    };
     r.onerror = () => reject(r.error);
   });
 }
 
-async function countdownIdbClearActive() {
+async function countdownIdbSaveTimers(list) {
   const db = await countdownOpenDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(COUNTDOWN_STORE, 'readwrite');
-    tx.objectStore(COUNTDOWN_STORE).delete('active');
+    tx.objectStore(COUNTDOWN_STORE).put(list, COUNTDOWN_TIMERS_KEY);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
 }
 
-function countdownClearAlarmTimer() {
-  if (countdownAlarmTimer) {
-    clearTimeout(countdownAlarmTimer);
-    countdownAlarmTimer = null;
-  }
+async function countdownIdbUpsertTimer(rec) {
+  const list = await countdownIdbGetTimers();
+  const idx = list.findIndex((t) => t.id === rec.id);
+  if (idx >= 0) list[idx] = { ...list[idx], ...rec };
+  else list.push(rec);
+  await countdownIdbSaveTimers(list);
+}
+
+async function countdownIdbRemoveTimer(id) {
+  const list = (await countdownIdbGetTimers()).filter((t) => t.id !== id);
+  await countdownIdbSaveTimers(list);
+}
+
+async function countdownIdbClearAllTimers() {
+  await countdownIdbSaveTimers([]);
 }
 
 async function countdownNotifyDone(rec) {
@@ -64,65 +91,70 @@ async function countdownNotifyDone(rec) {
     await self.registration.showNotification(rec.name || 'Ajastin', {
       body: 'Aika täynnä!',
       icon: 'icon.svg',
-      tag: 'countdown-end',
+      tag: `countdown-end-${rec.id}`,
       renotify: true,
     });
   } catch (e) {}
 }
 
-async function countdownBroadcastEnded(name) {
+async function countdownBroadcastEndedBatch(ended) {
+  if (!ended || ended.length === 0) return;
   try {
     const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const payload = {
+      type: 'COUNTDOWN_ENDED_BATCH',
+      ended: ended.map((t) => ({ id: t.id, name: t.name || '' })),
+    };
     clients.forEach((c) => {
       try {
-        c.postMessage({ type: 'COUNTDOWN_ENDED', name: name || '' });
+        c.postMessage(payload);
       } catch (err) {}
     });
   } catch (e) {}
 }
 
-async function countdownFireIfDue(rec) {
-  const current = await countdownIdbGetActive();
-  if (!current || current.targetEndMs !== rec.targetEndMs) return;
-  const name = current.name;
-  await countdownIdbClearActive();
-  countdownClearAlarmTimer();
-  await countdownNotifyDone(rec);
-  await countdownBroadcastEnded(name);
+async function countdownProcessDueTimers() {
+  const list = await countdownIdbGetTimers();
+  const now = Date.now();
+  const due = list.filter((t) => t.targetEndMs && t.targetEndMs <= now);
+  if (due.length === 0) return;
+  const remaining = list.filter((t) => !t.targetEndMs || t.targetEndMs > now);
+  await countdownIdbSaveTimers(remaining);
+  for (const rec of due) {
+    await countdownNotifyDone(rec);
+  }
+  await countdownBroadcastEndedBatch(due);
 }
 
 async function countdownScheduleFromIdb() {
   countdownClearAlarmTimer();
-  const rec = await countdownIdbGetActive();
-  if (!rec || !rec.targetEndMs) return;
 
-  const scheduleChunk = () => {
-    const left = rec.targetEndMs - Date.now();
+  const scheduleNext = async () => {
+    const list = await countdownIdbGetTimers();
+    const now = Date.now();
+    const future = list.filter((t) => t.targetEndMs && t.targetEndMs > now);
+    if (future.length === 0) return;
+
+    const nextEnd = Math.min(...future.map((t) => t.targetEndMs));
+    const left = nextEnd - Date.now();
     if (left <= 0) {
-      countdownFireIfDue(rec);
+      await countdownProcessDueTimers();
+      await scheduleNext();
       return;
     }
     const wait = Math.min(left, COUNTDOWN_WAKE_CHUNK_MS);
     countdownAlarmTimer = setTimeout(async () => {
-      const fresh = await countdownIdbGetActive();
-      if (!fresh || fresh.targetEndMs !== rec.targetEndMs) return;
-      if (Date.now() >= fresh.targetEndMs) {
-        await countdownFireIfDue(fresh);
-      } else {
-        scheduleChunk();
-      }
+      await countdownProcessDueTimers();
+      await scheduleNext();
     }, wait);
   };
 
-  scheduleChunk();
+  await scheduleNext();
 }
 
 async function countdownCheckExpiredFromIdb() {
-  const rec = await countdownIdbGetActive();
-  if (!rec || !rec.targetEndMs) return;
-  if (Date.now() >= rec.targetEndMs) {
-    await countdownFireIfDue(rec);
-  }
+  await countdownProcessDueTimers();
+  await countdownScheduleFromIdb();
 }
 
 self.addEventListener('notificationclick', (e) => {
@@ -151,7 +183,16 @@ self.addEventListener('message', (e) => {
       durationTotalMs: d.durationTotalMs,
     };
     e.waitUntil(
-      countdownIdbPutActive(rec).then(() => countdownScheduleFromIdb())
+      countdownIdbUpsertTimer(rec).then(() => countdownScheduleFromIdb())
+    );
+    return;
+  }
+
+  if (d.type === 'COUNTDOWN_REMOVE') {
+    const id = d.id;
+    if (!id) return;
+    e.waitUntil(
+      countdownIdbRemoveTimer(id).then(() => countdownScheduleFromIdb())
     );
     return;
   }
@@ -160,16 +201,25 @@ self.addEventListener('message', (e) => {
     e.waitUntil(
       Promise.resolve()
         .then(() => countdownClearAlarmTimer())
-        .then(() => countdownIdbClearActive())
+        .then(() => countdownIdbClearAllTimers())
+        .then(() => countdownScheduleFromIdb())
+    );
+    return;
+  }
+
+  if (d.type === 'COUNTDOWN_SYNC_ALL') {
+    const timers = Array.isArray(d.timers) ? d.timers : [];
+    e.waitUntil(
+      countdownIdbSaveTimers(timers).then(() => countdownScheduleFromIdb())
     );
     return;
   }
 
   if (d.type === 'COUNTDOWN_GET_ACTIVE' && e.source) {
     e.waitUntil(
-      countdownIdbGetActive().then((rec) => {
+      countdownIdbGetTimers().then((timers) => {
         try {
-          e.source.postMessage({ type: 'COUNTDOWN_ACTIVE_STATE', rec: rec || null });
+          e.source.postMessage({ type: 'COUNTDOWN_ACTIVE_STATE', timers });
         } catch (err) {}
       })
     );

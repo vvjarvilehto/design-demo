@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     body { font-family: 'Nunito', sans-serif; }
-    body.has-active-timer { padding-top: 3.5rem; }
+    body.has-active-timer { padding-top: min(40vh, 11rem); }
     #ring {
       transform: rotate(-90deg);
       transition: stroke-dashoffset 0.35s ease;
@@ -30,21 +30,19 @@
       height: 100%;
       z-index: 40;
     }
-    #active-bar { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    #active-bar-wrap { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
   </style>
 </head>
 <body class="min-h-screen bg-[#fff7ed] p-5 pb-10">
 
   <canvas id="confetti-canvas" aria-hidden="true"></canvas>
 
-  <!-- Käynnissä: yläpalkki -->
-  <button type="button" id="active-bar" class="hidden fixed top-0 left-0 right-0 z-[60] flex items-center justify-between gap-3 px-4 py-2.5 bg-white/95 border-b border-orange-100 backdrop-blur-sm text-left w-full active:bg-orange-50/90 transition-colors" aria-expanded="false" aria-controls="detail-panel">
-    <div class="min-w-0 flex-1">
-      <div id="bar-name" class="text-xs font-bold text-gray-500 truncate">Ajastin</div>
-      <div id="bar-time" class="text-lg font-black tabular-nums text-orange-600 leading-tight">0:00</div>
+  <!-- Käynnissä: ajastimet listana -->
+  <div id="active-bar-wrap" class="hidden fixed top-0 left-0 right-0 z-[60] bg-white/95 border-b border-orange-100 backdrop-blur-sm" role="region" aria-label="Käynnissä olevat ajastimet">
+    <div class="max-h-[min(40vh,220px)] overflow-y-auto overscroll-contain">
+      <div id="active-timers-list" class="divide-y divide-orange-50"></div>
     </div>
-    <span class="text-xs font-bold text-orange-400 shrink-0">Avaa ›</span>
-  </button>
+  </div>
 
   <!-- Laajennettu näkymä -->
   <div id="detail-backdrop" class="fixed inset-0 z-[70] hidden bg-black/30 backdrop-blur-sm" aria-hidden="true"></div>
@@ -53,7 +51,8 @@
     <p id="detail-name" class="text-center font-black text-gray-900 text-lg mb-4 truncate px-1"></p>
     <div id="detail-remaining" class="text-center text-5xl font-black tabular-nums text-gray-900 mb-4">00:00</div>
     <p class="text-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Päättyy</p>
-    <p id="detail-ends" class="text-center text-base font-bold text-gray-700 mb-6"></p>
+    <p id="detail-ends" class="text-center text-base font-bold text-gray-700 mb-2"></p>
+    <p id="detail-mode" class="text-center text-xs font-semibold text-gray-400 mb-6"></p>
     <button type="button" id="detail-close" class="w-full py-3 rounded-2xl font-black text-white bg-orange-500 hover:bg-orange-600 transition-colors">
       Sulje
     </button>
@@ -176,6 +175,7 @@
 <script>
 (function () {
   const RING_LEN = 2 * Math.PI * 88;
+  const MAX_TIMERS = 12;
 
   const display = document.getElementById('display');
   const sub = document.getElementById('sub');
@@ -198,26 +198,25 @@
   const btnDismiss = document.getElementById('btn-dismiss');
   const canvas = document.getElementById('confetti-canvas');
   const ctx = canvas.getContext('2d');
-  const activeBar = document.getElementById('active-bar');
-  const barName = document.getElementById('bar-name');
-  const barTime = document.getElementById('bar-time');
+  const activeBarWrap = document.getElementById('active-bar-wrap');
+  const activeTimersList = document.getElementById('active-timers-list');
   const detailBackdrop = document.getElementById('detail-backdrop');
   const detailPanel = document.getElementById('detail-panel');
   const detailName = document.getElementById('detail-name');
   const detailRemaining = document.getElementById('detail-remaining');
   const detailEnds = document.getElementById('detail-ends');
+  const detailMode = document.getElementById('detail-mode');
   const detailClose = document.getElementById('detail-close');
+
+  /** @type {{ id: string, name: string, targetEndMs: number, mode: string, eventLabel: string, durationTotalMs: number }[]} */
+  let timers = [];
+  let selectedId = null;
+  let raf = null;
 
   let totalMs = 0;
   let remainingMs = 0;
-  let targetEnd = 0;
-  let raf = null;
-  let running = false;
-  let currentTimerName = '';
   let mode = 'duration';
   let eventTargetMs = 0;
-  let eventLabel = '';
-  let activeTimerId = '';
 
   function swPost(data) {
     if (navigator.serviceWorker && navigator.serviceWorker.controller) {
@@ -227,35 +226,52 @@
     }
   }
 
-  function syncCountdownToServiceWorker() {
-    if (!activeTimerId || !targetEnd) return;
+  function syncAllToServiceWorker() {
+    swPost({ type: 'COUNTDOWN_SYNC_ALL', timers: timers.map((t) => ({ ...t })) });
+  }
+
+  function syncOneToServiceWorker(t) {
     swPost({
       type: 'COUNTDOWN_SYNC',
-      id: activeTimerId,
-      name: currentTimerName,
-      targetEndMs: targetEnd,
-      mode,
-      eventLabel,
-      durationTotalMs: totalMs,
+      id: t.id,
+      name: t.name,
+      targetEndMs: t.targetEndMs,
+      mode: t.mode,
+      eventLabel: t.eventLabel || '',
+      durationTotalMs: t.durationTotalMs,
     });
   }
 
-  function clearCountdownServiceWorker() {
-    swPost({ type: 'COUNTDOWN_CLEAR' });
+  function removeFromServiceWorker(id) {
+    swPost({ type: 'COUNTDOWN_REMOVE', id });
   }
 
-  function requestActiveFromServiceWorker() {
+  function requestTimersFromServiceWorker() {
     swPost({ type: 'COUNTDOWN_GET_ACTIVE' });
   }
 
-  function notifyDone() {
-    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  function newId() {
+    return (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  }
+
+  function getSelected() {
+    return timers.find((t) => t.id === selectedId) || null;
+  }
+
+  function remainingFor(t) {
+    return Math.max(0, t.targetEndMs - Date.now());
+  }
+
+  function notifyDoneForTimer(t) {
+    if (!t || !('Notification' in window) || Notification.permission !== 'granted') return;
     if (document.visibilityState === 'visible') return;
     try {
       new Notification('Paras countdown-äppi ikinä', {
-        body: `${currentTimerName || 'Ajastin'} — aika täynnä!`,
+        body: `${t.name || 'Ajastin'} — aika täynnä!`,
         icon: 'icon.svg',
-        tag: 'countdown-end-page',
+        tag: `countdown-end-page-${t.id}`,
       });
     } catch (e) {}
   }
@@ -303,43 +319,55 @@
     return `${pad(m)}:${pad(s)}`;
   }
 
-  function updateRing() {
-    if (totalMs <= 0) {
+  function updateRingForSelection() {
+    const t = getSelected();
+    if (!t) {
       ring.style.strokeDasharray = String(RING_LEN);
       ring.style.strokeDashoffset = String(RING_LEN);
       return;
     }
-    const p = remainingMs / totalMs;
+    const rem = remainingFor(t);
+    const tot = t.durationTotalMs > 0 ? t.durationTotalMs : rem;
+    if (tot <= 0) {
+      ring.style.strokeDasharray = String(RING_LEN);
+      ring.style.strokeDashoffset = String(RING_LEN);
+      return;
+    }
+    const p = rem / tot;
     ring.style.strokeDasharray = String(RING_LEN);
-    ring.style.strokeDashoffset = String(RING_LEN * (1 - p));
+    ring.style.strokeDashoffset = String(RING_LEN * (1 - Math.min(1, Math.max(0, p))));
   }
 
-  function refreshDisplay() {
-    display.textContent = formatMs(remainingMs);
-    updateRing();
-    if (running) {
-      barTime.textContent = formatMs(remainingMs);
-      if (!detailPanel.classList.contains('hidden')) {
-        detailRemaining.textContent = formatMs(remainingMs);
-        detailEnds.textContent = formatEventTime(targetEnd);
-      }
+  function refreshMainDisplay() {
+    const t = getSelected();
+    if (!t) {
+      display.textContent = formatMs(remainingMs);
+      updateRingForSelection();
+      return;
     }
+    const rem = remainingFor(t);
+    display.textContent = formatMs(rem);
+    remainingMs = rem;
+    totalMs = t.durationTotalMs > 0 ? t.durationTotalMs : rem;
+    updateRingForSelection();
+    if (!detailPanel.classList.contains('hidden') && detailPanel.dataset.timerId === t.id) {
+      detailRemaining.textContent = formatMs(rem);
+      detailEnds.textContent = formatEventTime(t.targetEndMs);
+    }
+  }
+
+  function updateListRowTimes() {
+    activeTimersList.querySelectorAll('button[data-timer-id]').forEach((row) => {
+      const id = row.getAttribute('data-timer-id');
+      const t = timers.find((x) => x.id === id);
+      const tm = row.querySelector('.timer-row-time');
+      if (t && tm) tm.textContent = formatMs(remainingFor(t));
+    });
   }
 
   function setStatus(text, subText) {
     statusEl.textContent = text;
     sub.textContent = subText || '';
-  }
-
-  function setInputsEnabled(on) {
-    inH.disabled = !on;
-    inM.disabled = !on;
-    inS.disabled = !on;
-    eventDatetime.disabled = !on;
-    timerNameInput.disabled = !on;
-    document.querySelectorAll('.preset').forEach(b => { b.disabled = !on || mode !== 'duration'; });
-    modeDuration.disabled = !on;
-    modeEvent.disabled = !on;
   }
 
   function updateModeButtons() {
@@ -353,33 +381,34 @@
     eventCard.classList.toggle('hidden', durationOn);
     presetCard.classList.toggle('hidden', !durationOn);
     durationCard.classList.toggle('hidden', !durationOn);
-    document.querySelectorAll('.preset').forEach(b => { b.disabled = running || !durationOn; });
+    document.querySelectorAll('.preset').forEach(b => { b.disabled = mode !== 'duration'; });
   }
 
-  function switchMode(nextMode) {
-    if (running) return;
-    mode = nextMode;
-    updateModeButtons();
+  function applyFormPreviewFromMode() {
     if (mode === 'duration') {
       totalMs = parseInputs();
       remainingMs = totalMs;
-      refreshDisplay();
-      setStatus('Valmis', '');
+      setStatus('Valmis', timers.length ? `${timers.length} ajastinta käynnissä` : '');
     } else {
       const nextTarget = parseEventTargetMs();
       if (nextTarget) {
         const left = Math.max(0, nextTarget - Date.now());
         totalMs = left;
         remainingMs = left;
-        refreshDisplay();
         setStatus('Valmis', `Kohti: ${formatEventTime(nextTarget)}`);
       } else {
         totalMs = 0;
         remainingMs = 0;
-        refreshDisplay();
-        setStatus('Valmis', 'Valitse tapahtuman aika');
+        setStatus('Valmis', timers.length ? `${timers.length} ajastinta käynnissä` : 'Valitse tapahtuman aika');
       }
     }
+    refreshMainDisplay();
+  }
+
+  function switchMode(nextMode) {
+    mode = nextMode;
+    updateModeButtons();
+    applyFormPreviewFromMode();
   }
 
   function stopLoop() {
@@ -388,34 +417,105 @@
   }
 
   function showTopBar(show) {
-    activeBar.classList.toggle('hidden', !show);
+    activeBarWrap.classList.toggle('hidden', !show);
     document.body.classList.toggle('has-active-timer', show);
   }
 
-  function openDetail() {
-    detailName.textContent = currentTimerName;
-    detailRemaining.textContent = formatMs(remainingMs);
-    detailEnds.textContent = formatEventTime(targetEnd);
+  function renderTimerList() {
+    activeTimersList.replaceChildren();
+    if (timers.length === 0) {
+      showTopBar(false);
+      return;
+    }
+    showTopBar(true);
+    const frag = document.createDocumentFragment();
+    const sorted = [...timers].sort((a, b) => a.targetEndMs - b.targetEndMs);
+    sorted.forEach((t) => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left active:bg-orange-50/90 transition-colors';
+      row.setAttribute('data-timer-id', t.id);
+      if (t.id === selectedId) row.classList.add('bg-orange-50/70');
+      const left = document.createElement('div');
+      left.className = 'min-w-0 flex-1';
+      const nm = document.createElement('div');
+      nm.className = 'text-xs font-bold text-gray-600 truncate';
+      nm.textContent = t.name;
+      const tm = document.createElement('div');
+      tm.className = 'timer-row-time text-base font-black tabular-nums text-orange-600 leading-tight';
+      tm.textContent = formatMs(remainingFor(t));
+      left.appendChild(nm);
+      left.appendChild(tm);
+      const chev = document.createElement('span');
+      chev.className = 'text-xs font-bold text-orange-400 shrink-0';
+      chev.textContent = '›';
+      row.appendChild(left);
+      row.appendChild(chev);
+      row.addEventListener('click', () => openDetailFor(t.id));
+      frag.appendChild(row);
+    });
+    activeTimersList.appendChild(frag);
+  }
+
+  function openDetailFor(id) {
+    const t = timers.find((x) => x.id === id);
+    if (!t) return;
+    selectedId = id;
+    renderTimerList();
+    detailPanel.dataset.timerId = id;
+    detailName.textContent = t.name;
+    detailRemaining.textContent = formatMs(remainingFor(t));
+    detailEnds.textContent = formatEventTime(t.targetEndMs);
+    detailMode.textContent = t.mode === 'event'
+      ? 'Tapahtuma-aikaan'
+      : `Alkuperäinen kesto ${formatMs(t.durationTotalMs > 0 ? t.durationTotalMs : remainingFor(t))}`;
     detailBackdrop.classList.remove('hidden');
     detailPanel.classList.remove('hidden');
-    activeBar.setAttribute('aria-expanded', 'true');
   }
 
   function closeDetail() {
     detailBackdrop.classList.add('hidden');
     detailPanel.classList.add('hidden');
-    activeBar.setAttribute('aria-expanded', 'false');
+    delete detailPanel.dataset.timerId;
+  }
+
+  function showCelebrationBatch(items) {
+    if (!items || items.length === 0) return;
+    const first = items[0];
+    celebrateTitle.textContent = items.length === 1
+      ? ((first.name && first.name.trim()) || 'Ajastin')
+      : `${items.length} ajastinta`;
+    celebrateDefault.classList.remove('hidden');
+    celebrateDefault.textContent = items.length > 1
+      ? `${items.length} ajastinta päättyi.`
+      : 'Hienoa — saavutit mitän asettamasi.';
+    overlay.classList.remove('hidden');
+    overlay.classList.add('flex');
+    playFanfare();
+    if (navigator.vibrate) navigator.vibrate([80, 50, 80, 50, 120]);
+    confettiBurst();
   }
 
   function tick() {
-    if (!running) return;
-    remainingMs = Math.max(0, targetEnd - Date.now());
-    refreshDisplay();
-    if (remainingMs <= 0) {
-      finish();
+    if (timers.length === 0) {
+      stopLoop();
       return;
     }
+    const now = Date.now();
+    const done = timers.filter((t) => t.targetEndMs <= now);
+    if (done.length) {
+      const ids = done.map((t) => t.id);
+      done.forEach((t) => notifyDoneForTimer(t));
+      showCelebrationBatch(done);
+      removeEndedByIds(ids);
+    }
+    updateListRowTimes();
+    refreshMainDisplay();
     raf = requestAnimationFrame(tick);
+  }
+
+  function ensureTickLoop() {
+    if (!raf && timers.length) raf = requestAnimationFrame(tick);
   }
 
   function playFanfare() {
@@ -492,48 +592,6 @@
     requestAnimationFrame(step);
   }
 
-  function showCelebration() {
-    playFanfare();
-    if (navigator.vibrate) navigator.vibrate([80, 50, 80, 50, 120]);
-    confettiBurst();
-    celebrateTitle.textContent = (currentTimerName && currentTimerName.trim()) || 'Ajastin';
-    celebrateDefault.classList.remove('hidden');
-    overlay.classList.remove('hidden');
-    overlay.classList.add('flex');
-  }
-
-  function finish() {
-    if (!running) return;
-    running = false;
-    stopLoop();
-    remainingMs = 0;
-    refreshDisplay();
-    setStatus('Valmis', '');
-    clearCountdownServiceWorker();
-    showTopBar(false);
-    closeDetail();
-    btnStart.disabled = false;
-    setInputsEnabled(true);
-
-    notifyDone();
-    showCelebration();
-  }
-
-  function finishFromServiceWorker(name) {
-    if (!running) return;
-    running = false;
-    stopLoop();
-    remainingMs = 0;
-    refreshDisplay();
-    setStatus('Valmis', '');
-    if (name) currentTimerName = name;
-    showTopBar(false);
-    closeDetail();
-    btnStart.disabled = false;
-    setInputsEnabled(true);
-    showCelebration();
-  }
-
   function start() {
     const name = timerNameInput.value.trim();
     if (!name) {
@@ -541,6 +599,15 @@
       timerNameInput.focus();
       return;
     }
+    if (timers.length >= MAX_TIMERS) {
+      setStatus('Raja', `Enintään ${MAX_TIMERS} ajastinta`);
+      return;
+    }
+
+    let durationTotalMs = 0;
+    let targetEnd = 0;
+    let tMode = mode;
+    let eventLabel = '';
 
     if (mode === 'event') {
       const parsedTarget = parseEventTargetMs();
@@ -553,88 +620,87 @@
         setStatus('Virhe', 'Tapahtuma-aika on jo mennyt');
         return;
       }
-      eventTargetMs = parsedTarget;
-      eventLabel = '';
-      totalMs = parsedTarget - now;
+      targetEnd = parsedTarget;
+      durationTotalMs = parsedTarget - now;
     } else {
-      totalMs = parseInputs();
-      eventTargetMs = 0;
-      eventLabel = '';
+      const dur = parseInputs();
+      if (dur <= 0) {
+        setStatus('Virhe', 'Aseta vähintään yksi sekunti');
+        return;
+      }
+      durationTotalMs = dur;
+      targetEnd = Date.now() + dur;
     }
 
-    if (totalMs <= 0) {
-      setStatus('Virhe', 'Aseta vähintään yksi sekunti');
-      return;
-    }
+    const rec = {
+      id: newId(),
+      name: name.slice(0, 80),
+      targetEndMs: targetEnd,
+      mode: tMode,
+      eventLabel,
+      durationTotalMs,
+    };
+    timers.push(rec);
+    selectedId = rec.id;
+    ensureSelectedId();
+    syncOneToServiceWorker(rec);
+    renderTimerList();
+    applyFormPreviewFromMode();
+    ensureTickLoop();
 
-    currentTimerName = name.slice(0, 80);
-    activeTimerId = (typeof crypto !== 'undefined' && crypto.randomUUID)
-      ? crypto.randomUUID()
-      : `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    remainingMs = totalMs;
-    running = true;
-    targetEnd = mode === 'event' ? eventTargetMs : Date.now() + totalMs;
-    setInputsEnabled(false);
-    barName.textContent = currentTimerName;
-    barTime.textContent = formatMs(remainingMs);
-    showTopBar(true);
-
-    if (mode === 'event') {
-      setStatus('Käynnissä', `Päättyy ${formatEventTime(targetEnd)}`);
-    } else {
-      setStatus('Käynnissä', 'Jäljellä');
-    }
-    btnStart.disabled = true;
-    refreshDisplay();
-    tick();
-
-    syncCountdownToServiceWorker();
+    timerNameInput.value = '';
+    setStatus('Lisätty', `${timers.length} ajastinta — voit käynnistää uuden`);
 
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission().catch(() => {});
     }
   }
 
-  function applyRestoredState(rec) {
-    if (!rec || !rec.targetEndMs || rec.targetEndMs <= Date.now()) return;
-    const left = rec.targetEndMs - Date.now();
-    targetEnd = rec.targetEndMs;
-    totalMs = rec.durationTotalMs && rec.durationTotalMs > 0 ? rec.durationTotalMs : left;
-    remainingMs = left;
-    mode = rec.mode === 'event' ? 'event' : 'duration';
-    eventTargetMs = mode === 'event' ? rec.targetEndMs : 0;
-    eventLabel = rec.eventLabel || '';
-    currentTimerName = (rec.name || 'Ajastin').slice(0, 80);
-    activeTimerId = rec.id || activeTimerId;
-    running = true;
+  function removeEndedByIds(ids) {
+    const set = new Set(ids);
+    const closedId = detailPanel.dataset.timerId;
+    if (closedId && set.has(closedId)) closeDetail();
+    timers = timers.filter((t) => !set.has(t.id));
+    ensureSelectedId();
+    syncAllToServiceWorker();
+    renderTimerList();
+    refreshMainDisplay();
+    applyFormPreviewFromMode();
+    if (timers.length === 0) stopLoop();
+  }
 
-    updateModeButtons();
-    timerNameInput.value = currentTimerName;
-    setInputsEnabled(false);
-    barName.textContent = currentTimerName;
-    barTime.textContent = formatMs(remainingMs);
-    showTopBar(true);
-    if (mode === 'event') {
-      const d = new Date(rec.targetEndMs);
-      const pad2 = (n) => String(n).padStart(2, '0');
-      eventDatetime.value = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-      setStatus('Käynnissä', `Päättyy ${formatEventTime(targetEnd)}`);
-    } else {
-      setStatus('Käynnissä', 'Jäljellä');
+  function mergeRestoredTimers(incoming) {
+    if (!Array.isArray(incoming) || incoming.length === 0) return;
+    const valid = incoming.filter((t) => t && t.id && t.targetEndMs > Date.now());
+    if (valid.length === 0) return;
+    const byId = new Map(timers.map((t) => [t.id, t]));
+    valid.forEach((t) => byId.set(t.id, { ...t }));
+    timers = Array.from(byId.values()).filter((t) => t.targetEndMs > Date.now());
+    if (!selectedId || !timers.some((x) => x.id === selectedId)) {
+      const sorted = [...timers].sort((a, b) => a.targetEndMs - b.targetEndMs);
+      selectedId = sorted[0] ? sorted[0].id : null;
     }
-    btnStart.disabled = true;
-    refreshDisplay();
-    tick();
-    syncCountdownToServiceWorker();
+    renderTimerList();
+    applyFormPreviewFromMode();
+    ensureTickLoop();
+    syncAllToServiceWorker();
+  }
+
+  function ensureSelectedId() {
+    if (timers.length === 0) {
+      selectedId = null;
+      return;
+    }
+    if (!selectedId || !timers.some((x) => x.id === selectedId)) {
+      const sorted = [...timers].sort((a, b) => a.targetEndMs - b.targetEndMs);
+      selectedId = sorted[0].id;
+    }
   }
 
   btnStart.addEventListener('click', start);
   modeDuration.addEventListener('click', () => switchMode('duration'));
   modeEvent.addEventListener('click', () => switchMode('event'));
 
-  activeBar.addEventListener('click', () => {
-    if (running) openDetail();
-  });
   detailClose.addEventListener('click', closeDetail);
   detailBackdrop.addEventListener('click', closeDetail);
 
@@ -645,7 +711,7 @@
 
   document.querySelectorAll('.preset').forEach(btn => {
     btn.addEventListener('click', () => {
-      if (running || mode !== 'duration') return;
+      if (mode !== 'duration') return;
       const sec = parseInt(btn.getAttribute('data-preset'), 10);
       const h = Math.floor(sec / 3600);
       const m = Math.floor((sec % 3600) / 60);
@@ -653,41 +719,33 @@
       inH.value = h;
       inM.value = m;
       inS.value = s;
-      totalMs = sec * 1000;
-      remainingMs = totalMs;
-      refreshDisplay();
-      setStatus('Valmis', '');
+      applyFormPreviewFromMode();
     });
   });
 
   [inH, inM, inS].forEach(el => {
     el.addEventListener('change', () => {
-      if (running) return;
-      totalMs = parseInputs();
-      remainingMs = totalMs;
-      refreshDisplay();
+      if (mode === 'duration') applyFormPreviewFromMode();
     });
   });
 
   eventDatetime.addEventListener('change', () => {
-    if (running || mode !== 'event') return;
-    const nextTarget = parseEventTargetMs();
-    if (!nextTarget) {
-      setStatus('Valmis', 'Valitse tapahtuman aika');
-      return;
-    }
-    const left = Math.max(0, nextTarget - Date.now());
-    totalMs = left;
-    remainingMs = left;
-    refreshDisplay();
-    setStatus('Valmis', `Kohti: ${formatEventTime(nextTarget)}`);
+    if (mode === 'event') applyFormPreviewFromMode();
   });
 
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && running) {
-      remainingMs = Math.max(0, targetEnd - Date.now());
-      refreshDisplay();
-      if (remainingMs <= 0) finish();
+    if (!document.hidden && timers.length) {
+      const now = Date.now();
+      const done = timers.filter((t) => t.targetEndMs <= now);
+      if (done.length) {
+        const ids = done.map((t) => t.id);
+        done.forEach((t) => notifyDoneForTimer(t));
+        showCelebrationBatch(done);
+        removeEndedByIds(ids);
+      } else {
+        renderTimerList();
+        refreshMainDisplay();
+      }
     }
   });
 
@@ -697,19 +755,22 @@
     navigator.serviceWorker.addEventListener('message', (ev) => {
       const d = ev.data;
       if (!d || typeof d !== 'object') return;
-      if (d.type === 'COUNTDOWN_ENDED') {
-        finishFromServiceWorker(d.name);
-      }
-      if (d.type === 'COUNTDOWN_ACTIVE_STATE') {
-        if (!running && d.rec && d.rec.targetEndMs > Date.now()) {
-          applyRestoredState(d.rec);
+      if (d.type === 'COUNTDOWN_ENDED_BATCH' && Array.isArray(d.ended) && d.ended.length) {
+        const ids = new Set(d.ended.map((x) => x.id).filter(Boolean));
+        const hadAny = timers.some((t) => ids.has(t.id));
+        if (hadAny) {
+          showCelebrationBatch(d.ended.map((x) => ({ name: x.name, id: x.id })));
         }
+        removeEndedByIds([...ids]);
+      }
+      if (d.type === 'COUNTDOWN_ACTIVE_STATE' && Array.isArray(d.timers)) {
+        mergeRestoredTimers(d.timers);
       }
     });
 
     navigator.serviceWorker.register('sw.js').then((reg) => {
       reg.update();
-      const askRestore = () => requestActiveFromServiceWorker();
+      const askRestore = () => requestTimersFromServiceWorker();
       if (navigator.serviceWorker.controller) {
         askRestore();
       } else {
@@ -722,7 +783,7 @@
   remainingMs = totalMs;
   ring.style.strokeDasharray = String(RING_LEN);
   updateModeButtons();
-  refreshDisplay();
+  applyFormPreviewFromMode();
 })();
 </script>
 </body>

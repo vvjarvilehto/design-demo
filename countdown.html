@@ -43,17 +43,11 @@
       <p class="text-gray-500 font-semibold text-sm mt-1">Aseta aika, aloita — lopussa juhla</p>
     </header>
 
-    <!-- Tallennetut ajastimet (localStorage, PWA) -->
+    <!-- Tallennetut ajastimet (localStorage, PWA) — päivittyvät kun aloitat ajastuksen -->
     <div id="saved-section" class="mb-4">
-      <div class="flex items-center justify-between gap-2 mb-2 px-1">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Tallennetut</div>
-        <button id="btn-save-timer" type="button"
-          class="shrink-0 px-3 py-1.5 rounded-full text-xs font-black bg-white border-2 border-orange-200 text-orange-800 shadow-sm active:scale-95 transition-transform disabled:opacity-40 disabled:pointer-events-none">
-          + Tallenna nykyinen
-        </button>
-      </div>
-      <p id="saved-empty" class="text-center text-xs text-gray-400 font-medium py-2 px-2">Ei tallennettuja — valitse asetukset ja paina &quot;Tallenna nykyinen&quot;.</p>
-      <div id="saved-list" class="hidden flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory scroll-smooth" style="-webkit-overflow-scrolling: touch;"></div>
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Tallennetut</div>
+      <p id="saved-empty" class="text-center text-xs text-gray-400 font-medium py-2 px-2">Ei vielä tallennettuja — aloita ajastin, niin se tallentuu tähän listaan.</p>
+      <div id="saved-list" class="hidden space-y-2"></div>
     </div>
 
     <!-- Esiasetukset -->
@@ -118,21 +112,6 @@
       </div>
     </div>
 
-    <!-- Aikakapseli -->
-    <div class="rounded-3xl p-4 mb-6 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-dashed border-amber-300 shadow-[0_4px_20px_rgba(251,191,36,0.15)]">
-      <div class="flex items-start gap-3">
-        <span class="text-3xl shrink-0" aria-hidden="true">📬</span>
-        <div class="min-w-0 flex-1">
-          <div class="font-black text-gray-900 text-sm">Aikakapseli (yllätys)</div>
-          <p class="text-xs text-gray-600 font-medium mt-1 leading-relaxed">
-            Kirjoita lyhyt viesti itsellesi — se lukitaan ja <strong>paljastuu juhlallisesti</strong>, kun ajastin päättyy. Voit jättää tyhjäksi.
-          </p>
-          <textarea id="capsule" maxlength="120" rows="2" placeholder="Esim. Hyvin tehty — nyt kahvitauko ☕"
-            class="mt-3 w-full rounded-2xl border-2 border-amber-200 bg-white/90 px-3 py-2 text-sm font-semibold text-gray-800 placeholder:text-gray-400 focus:border-amber-400 outline-none resize-none"></textarea>
-        </div>
-      </div>
-    </div>
-
     <!-- Näyttö + rengas -->
     <div class="flex flex-col items-center mb-6">
       <div class="relative w-64 h-64 sm:w-72 sm:h-72">
@@ -173,10 +152,6 @@
       <div class="text-5xl mb-4" aria-hidden="true">🎉</div>
       <h2 id="celebrate-title" class="text-2xl font-black text-gray-900">Aika täynnä!</h2>
       <p id="celebrate-default" class="text-gray-600 font-semibold mt-2">Hienoa — saavutit mitän asettamasi.</p>
-      <div id="celebrate-capsule" class="hidden mt-5 p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
-        <div class="text-xs font-bold text-amber-700 uppercase tracking-wider mb-1">Aikakapselisi</div>
-        <p id="celebrate-text" class="text-lg font-bold text-gray-900 whitespace-pre-wrap break-words"></p>
-      </div>
       <button type="button" id="btn-dismiss" class="mt-8 w-full py-3 rounded-2xl font-black text-white bg-orange-500 hover:bg-orange-600 transition-colors">
         Selvä!
       </button>
@@ -202,17 +177,14 @@
   const inH = document.getElementById('in-h');
   const inM = document.getElementById('in-m');
   const inS = document.getElementById('in-s');
-  const capsuleInput = document.getElementById('capsule');
   const overlay = document.getElementById('overlay');
+  const celebrateTitle = document.getElementById('celebrate-title');
   const celebrateDefault = document.getElementById('celebrate-default');
-  const celebrateCapsule = document.getElementById('celebrate-capsule');
-  const celebrateText = document.getElementById('celebrate-text');
   const btnDismiss = document.getElementById('btn-dismiss');
   const canvas = document.getElementById('confetti-canvas');
   const ctx = canvas.getContext('2d');
   const savedList = document.getElementById('saved-list');
   const savedEmpty = document.getElementById('saved-empty');
-  const btnSaveTimer = document.getElementById('btn-save-timer');
 
   const STORAGE_KEY = 'countdown-saved-timers-v1';
   const MAX_SAVED = 24;
@@ -223,7 +195,7 @@
   let raf = null;
   let running = false;
   let paused = false;
-  let lockedCapsule = '';
+  let currentTimerName = '';
   let mode = 'duration';
   let eventTargetMs = 0;
   let eventLabel = '';
@@ -272,7 +244,7 @@
       const t = entry.targetMs;
       return t && Number.isFinite(t) ? `Kohti ${formatEventTime(t)}` : 'Tapahtuma';
     }
-    return 'Kesto (aloita alla)';
+    return 'Kesto';
   }
 
   function renderSavedTimers() {
@@ -293,14 +265,31 @@
     list.forEach((entry) => {
       const row = document.createElement('button');
       row.type = 'button';
-      row.className = 'saved-card snap-start shrink-0 w-[min(85vw,240px)] rounded-2xl border-2 border-orange-100 bg-white/95 p-3 shadow-sm text-left active:scale-[0.98] transition-transform hover:border-orange-200';
+      row.className = 'saved-row w-full rounded-2xl border-2 border-orange-100 bg-white/95 px-3 py-2.5 shadow-sm text-left active:scale-[0.99] transition-transform hover:border-orange-200 flex flex-wrap items-center gap-2';
 
-      const top = document.createElement('div');
-      top.className = 'flex justify-between items-start gap-1';
+      const main = document.createElement('div');
+      main.className = 'min-w-0 flex-1';
       const title = document.createElement('div');
-      title.className = 'font-bold text-sm text-gray-900 truncate min-w-0';
+      title.className = 'font-bold text-sm text-gray-900 truncate';
       title.textContent = entry.name || 'Ajastin';
       title.title = entry.name || '';
+      const subEl = document.createElement('div');
+      subEl.className = 'text-[10px] font-semibold text-gray-400 mt-0.5 truncate';
+      subEl.textContent = sublineForSavedEntry(entry);
+      main.appendChild(title);
+      main.appendChild(subEl);
+
+      const timeEl = document.createElement('div');
+      timeEl.className = 'text-lg font-black tabular-nums shrink-0 text-right min-w-[4.5rem]';
+      const rem = remainingForSavedEntry(entry, now);
+      if (entry.mode === 'event' && rem <= 0) {
+        timeEl.textContent = '0:00';
+        timeEl.classList.add('text-gray-400');
+      } else {
+        timeEl.textContent = formatMs(rem);
+        timeEl.classList.add('text-orange-600');
+      }
+
       const del = document.createElement('button');
       del.type = 'button';
       del.className = 'shrink-0 text-gray-400 hover:text-red-600 text-xl font-black leading-none px-1 rounded-lg';
@@ -312,27 +301,10 @@
         persistSavedTimers(next);
         renderSavedTimers();
       });
-      top.appendChild(title);
-      top.appendChild(del);
 
-      const timeEl = document.createElement('div');
-      timeEl.className = 'text-2xl font-black tabular-nums mt-1';
-      const rem = remainingForSavedEntry(entry, now);
-      if (entry.mode === 'event' && rem <= 0) {
-        timeEl.textContent = '0:00';
-        timeEl.classList.add('text-gray-400');
-      } else {
-        timeEl.textContent = formatMs(rem);
-        timeEl.classList.add('text-orange-600');
-      }
-
-      const subEl = document.createElement('div');
-      subEl.className = 'text-[10px] font-semibold text-gray-400 mt-0.5';
-      subEl.textContent = sublineForSavedEntry(entry);
-
-      row.appendChild(top);
+      row.appendChild(main);
       row.appendChild(timeEl);
-      row.appendChild(subEl);
+      row.appendChild(del);
 
       row.addEventListener('click', () => applySavedEntry(entry));
       frag.appendChild(row);
@@ -389,19 +361,18 @@
     setInputsEnabled(true);
   }
 
-  function saveCurrentAsPreset() {
-    if (running) return;
+  function sameSnapshot(a, b) {
+    if (!a || !b || a.mode !== b.mode) return false;
+    if (a.mode === 'event') return a.targetMs === b.targetMs;
+    return a.durationSec === b.durationSec;
+  }
+
+  /** Tallenna nykyinen asetus käynnistyksessä (ei duplikaatteja samaan kohteeseen / kestoon). */
+  function persistSnapshotOnStart() {
     let payload = null;
     if (mode === 'event') {
-      const target = parseEventTargetMs();
-      if (!target) {
-        setStatus('Virhe', 'Valitse tapahtuman päivämäärä ennen tallennusta');
-        return;
-      }
-      if (target <= Date.now()) {
-        setStatus('Virhe', 'Tapahtuma on jo mennyt — ei voi tallentaa');
-        return;
-      }
+      const target = eventTargetMs;
+      if (!target || !Number.isFinite(target)) return;
       const name = (eventName.value.trim() || defaultSavedName()).slice(0, 80);
       payload = {
         id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
@@ -411,11 +382,8 @@
         eventLabel: eventName.value.trim()
       };
     } else {
-      const sec = Math.floor(parseInputs() / 1000);
-      if (sec <= 0) {
-        setStatus('Virhe', 'Aseta kesto ennen tallennusta');
-        return;
-      }
+      const sec = Math.floor(totalMs / 1000);
+      if (sec <= 0) return;
       const name = defaultSavedName().slice(0, 80);
       payload = {
         id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `t-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
@@ -425,28 +393,11 @@
       };
     }
 
-    const list = loadSavedTimers();
-    if (list.length >= MAX_SAVED) {
-      setStatus('Virhe', `Enintään ${MAX_SAVED} tallennettua`);
-      return;
-    }
+    let list = loadSavedTimers().filter(x => !sameSnapshot(x, payload));
     list.unshift(payload);
+    if (list.length > MAX_SAVED) list = list.slice(0, MAX_SAVED);
     persistSavedTimers(list);
     renderSavedTimers();
-    setStatus('Valmis', 'Tallennettu');
-  }
-
-  function updateSaveButtonState() {
-    let can = !running;
-    if (can) {
-      if (mode === 'event') {
-        const t = parseEventTargetMs();
-        can = !!(t && t > Date.now());
-      } else {
-        can = parseInputs() > 0;
-      }
-    }
-    btnSaveTimer.disabled = !can;
   }
 
   function pad(n) {
@@ -518,11 +469,9 @@
     inS.disabled = !on;
     eventName.disabled = !on;
     eventDatetime.disabled = !on;
-    capsuleInput.readOnly = !on;
     document.querySelectorAll('.preset').forEach(b => { b.disabled = !on || mode !== 'duration'; });
     modeDuration.disabled = !on;
     modeEvent.disabled = !on;
-    updateSaveButtonState();
   }
 
   function updateModeButtons() {
@@ -640,7 +589,7 @@
   function notifyDone() {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     try {
-      new Notification('Paras countdown-äppi ikinä', { body: 'Aika on täynnä — tarkista aikakapselisi!', icon: 'icon.svg' });
+      new Notification('Paras countdown-äppi ikinä', { body: `${currentTimerName || 'Ajastin'} — aika täynnä!`, icon: 'icon.svg' });
     } catch (e) {}
   }
 
@@ -661,10 +610,8 @@
     confettiBurst();
     notifyDone();
 
-    const msg = lockedCapsule.trim();
-    celebrateDefault.classList.toggle('hidden', !!msg);
-    celebrateCapsule.classList.toggle('hidden', !msg);
-    celebrateText.textContent = msg || '';
+    celebrateTitle.textContent = (currentTimerName && currentTimerName.trim()) || 'Ajastin';
+    celebrateDefault.classList.remove('hidden');
     overlay.classList.remove('hidden');
     overlay.classList.add('flex');
   }
@@ -680,7 +627,7 @@
           : `Kohti: ${formatEventTime(targetEnd)}`;
         setStatus('Käynnissä', text);
       } else {
-        setStatus('Käynnissä', lockedCapsule.trim() ? 'Aikakapseli lukittu' : 'Jäljellä');
+        setStatus('Käynnissä', 'Jäljellä');
       }
       btnStart.textContent = '▶ Käynnissä';
       btnPause.disabled = false;
@@ -713,7 +660,8 @@
       return;
     }
 
-    lockedCapsule = capsuleInput.value;
+    currentTimerName = defaultSavedName();
+    persistSnapshotOnStart();
     remainingMs = totalMs;
     running = true;
     paused = false;
@@ -725,7 +673,7 @@
         : `Kohti: ${formatEventTime(targetEnd)}`;
       setStatus('Käynnissä', text);
     } else {
-      setStatus('Käynnissä', lockedCapsule.trim() ? 'Aikakapseli lukittu' : 'Jäljellä');
+      setStatus('Käynnissä', 'Jäljellä');
     }
     btnStart.disabled = true;
     btnStart.textContent = '▶ Käynnissä';
@@ -756,7 +704,7 @@
     paused = false;
     totalMs = parseInputs();
     remainingMs = totalMs;
-    lockedCapsule = '';
+    currentTimerName = '';
     eventTargetMs = 0;
     eventLabel = '';
     refreshDisplay();
@@ -768,8 +716,6 @@
     overlay.classList.add('hidden');
     overlay.classList.remove('flex');
   }
-
-  btnSaveTimer.addEventListener('click', saveCurrentAsPreset);
 
   btnStart.addEventListener('click', start);
   btnPause.addEventListener('click', pause);
@@ -796,7 +742,6 @@
       remainingMs = totalMs;
       refreshDisplay();
       setStatus('Valmis', '');
-      updateSaveButtonState();
     });
   });
 
@@ -806,7 +751,6 @@
       totalMs = parseInputs();
       remainingMs = totalMs;
       refreshDisplay();
-      updateSaveButtonState();
     });
   });
 
@@ -815,7 +759,6 @@
     const nextTarget = parseEventTargetMs();
     if (!nextTarget) {
       setStatus('Valmis', '');
-      updateSaveButtonState();
       return;
     }
     const left = Math.max(0, nextTarget - Date.now());
@@ -823,10 +766,7 @@
     remainingMs = left;
     refreshDisplay();
     setStatus('Valmis', `Kohti: ${formatEventTime(nextTarget)}`);
-    updateSaveButtonState();
   });
-
-  eventName.addEventListener('input', () => { if (!running) updateSaveButtonState(); });
 
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) renderSavedTimers();
@@ -841,7 +781,6 @@
   refreshDisplay();
   renderSavedTimers();
   startSavedTicker();
-  updateSaveButtonState();
 })();
 </script>
 </body>

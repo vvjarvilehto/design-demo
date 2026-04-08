@@ -1,11 +1,12 @@
-const CACHE = 'tietovisa-v14';
+const CACHE = 'tietovisa-v15';
 
 const COUNTDOWN_DB = 'perhepakki-countdown';
 const COUNTDOWN_DB_VER = 2;
 const COUNTDOWN_STORE = 'timers';
 const COUNTDOWN_TIMERS_KEY = 'timers';
 const COUNTDOWN_LEGACY_ACTIVE_KEY = 'active';
-const COUNTDOWN_WAKE_CHUNK_MS = 5 * 60 * 1000;
+/** Herätä ajastinlogiikkaa usein — mobiili voi tappaa SW:n; lyhyempi chunk parantaa osumaa. */
+const COUNTDOWN_WAKE_CHUNK_MS = 60 * 1000;
 
 let countdownAlarmTimer = null;
 let countdownFetchCheckAt = 0;
@@ -91,8 +92,12 @@ async function countdownNotifyDone(rec) {
     await self.registration.showNotification(rec.name || 'Ajastin', {
       body: 'Aika täynnä!',
       icon: 'icon.svg',
+      badge: 'icon.svg',
       tag: `countdown-end-${rec.id}`,
       renotify: true,
+      requireInteraction: false,
+      vibrate: [180, 80, 180],
+      silent: false,
     });
   } catch (e) {}
 }
@@ -260,6 +265,13 @@ self.addEventListener('activate', e => {
   );
 });
 
+// Chrome: herättää SW:n ajoittain (vaatii käyttöoikeuden; ei kaikilla alustoilla)
+self.addEventListener('periodicsync', (e) => {
+  if (e.tag === 'countdown-check') {
+    e.waitUntil(countdownCheckExpiredFromIdb());
+  }
+});
+
 // Fetch: välimuisti ensin, sitten verkko – tallennetaan CDN-resurssit myös
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
@@ -292,7 +304,7 @@ self.addEventListener('fetch', e => {
 
   const sameOrigin = url.origin === self.location.origin;
 
-  if (sameOrigin && Date.now() - countdownFetchCheckAt > 8000) {
+  if (sameOrigin && Date.now() - countdownFetchCheckAt > 3000) {
     countdownFetchCheckAt = Date.now();
     countdownCheckExpiredFromIdb().catch(() => {});
   }

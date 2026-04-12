@@ -235,7 +235,7 @@
     </div>
 
     <!-- Pikavalinnat (vain kesto) -->
-    <div id="preset-card" class="rounded-3xl p-4 mb-4 bg-white/90 border theme-card shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+    <div id="preset-card" class="hidden rounded-3xl p-4 mb-4 bg-white/90 border theme-card shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
       <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pikavalinnat</div>
       <div class="flex flex-wrap gap-2">
         <button type="button" data-preset="60" class="preset theme-preset px-3 py-2 rounded-2xl text-sm font-bold border active:scale-95 transition-transform">1 min</button>
@@ -248,7 +248,7 @@
     </div>
 
     <!-- Oma kesto -->
-    <div id="duration-card" class="rounded-3xl p-4 mb-4 bg-white/90 border theme-card shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+    <div id="duration-card" class="hidden rounded-3xl p-4 mb-4 bg-white/90 border theme-card shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
       <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Kesto (tunnit, min, sek)</div>
       <div class="flex gap-3 justify-center items-end flex-wrap">
         <label class="text-center">
@@ -384,7 +384,7 @@
 
   let totalMs = 0;
   let remainingMs = 0;
-  let mode = 'duration';
+  let mode = null;
   let eventTargetMs = 0;
 
   function swPost(data) {
@@ -662,15 +662,16 @@
 
   function updateModeButtons() {
     const durationOn = mode === 'duration';
+    const eventOn = mode === 'event';
     modeDuration.className = durationOn
       ? 'px-4 py-2 rounded-2xl text-sm font-bold border-2 theme-mode-on active:scale-95 transition-transform'
       : 'px-4 py-2 rounded-2xl text-sm font-bold border-2 bg-white text-gray-600 theme-mode-off active:scale-95 transition-transform';
-    modeEvent.className = !durationOn
+    modeEvent.className = eventOn
       ? 'px-4 py-2 rounded-2xl text-sm font-bold border-2 theme-mode-on active:scale-95 transition-transform'
       : 'px-4 py-2 rounded-2xl text-sm font-bold border-2 bg-white text-gray-600 theme-mode-off active:scale-95 transition-transform';
-    eventCard.classList.toggle('hidden', durationOn);
     presetCard.classList.toggle('hidden', !durationOn);
     durationCard.classList.toggle('hidden', !durationOn);
+    eventCard.classList.toggle('hidden', !eventOn);
     document.querySelectorAll('.preset').forEach(b => { b.disabled = mode !== 'duration'; });
   }
 
@@ -691,7 +692,11 @@
   }
 
   function applyFormPreviewFromMode() {
-    if (mode === 'duration') {
+    if (mode === null) {
+      totalMs = 0;
+      remainingMs = 0;
+      setStatus('Valmis', timers.length ? `${timers.length} ajastinta käynnissä` : 'Valitse aika yllä');
+    } else if (mode === 'duration') {
       totalMs = parseInputs();
       remainingMs = totalMs;
       setStatus('Valmis', timers.length ? `${timers.length} ajastinta käynnissä` : '');
@@ -922,6 +927,11 @@
     }
     if (timers.length >= MAX_TIMERS) {
       setStatus('Raja', `Enintään ${MAX_TIMERS} ajastinta`);
+      return;
+    }
+
+    if (!mode) {
+      setStatus('Virhe', 'Valitse ensin aika tai tapahtuma');
       return;
     }
 

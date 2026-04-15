@@ -5,32 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Revontuliennuste Suomi</title>
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#f0f9ff" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     body { font-family: 'Nunito', sans-serif; }
-    .glow { box-shadow: 0 0 60px rgba(34, 211, 238, 0.15), 0 0 100px rgba(167, 139, 250, 0.12); }
+    .glow { box-shadow: 0 4px 28px rgba(6, 182, 212, 0.12), 0 0 48px rgba(139, 92, 246, 0.08); }
   </style>
 </head>
-<body class="min-h-screen bg-slate-950 text-slate-100 p-5 pb-10">
+<body class="min-h-screen bg-[#f0f9ff] text-slate-800 p-5 pb-10">
 
   <div class="max-w-md mx-auto">
-    <a href="index.html" class="inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-cyan-300 mb-4 transition-colors">
+    <a href="index.html" class="inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-cyan-600 mb-4 transition-colors">
       ‹ Etusivulle
     </a>
     <header class="mb-6 pt-2">
-      <p class="text-cyan-400/90 text-sm font-bold tracking-wide uppercase mb-1">Suomi</p>
-      <h1 class="text-3xl font-black text-white leading-tight">Revontuliennuste</h1>
-      <p class="text-slate-400 font-medium mt-2 text-sm leading-relaxed">
+      <p class="text-cyan-600 text-sm font-bold tracking-wide uppercase mb-1">Suomi</p>
+      <h1 class="text-3xl font-black text-slate-900 leading-tight">Revontuliennuste</h1>
+      <p class="text-slate-600 font-medium mt-2 text-sm leading-relaxed">
         Arvio perustuu planeettojen K-indeksiin (NOAA) ja paikalliseen pilvisyyteen yön tunneille (Open-Meteo). Tämä on karkea malli — ei virallinen ennuste.
       </p>
     </header>
 
-    <section class="rounded-3xl border border-slate-700/80 bg-slate-900/80 backdrop-blur glow p-5 mb-5">
+    <section class="rounded-3xl border border-slate-200/90 bg-white/90 backdrop-blur glow p-5 mb-5 shadow-sm">
       <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Sijainti</label>
       <div class="flex flex-col gap-2">
-        <select id="city" class="w-full rounded-2xl bg-slate-800 border border-slate-600 px-4 py-3 font-semibold text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50">
+        <select id="city" class="w-full rounded-2xl bg-white border border-slate-300 px-4 py-3 font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/40">
           <option value="60.1699,24.9384">Helsinki</option>
           <option value="60.4518,22.2666">Turku</option>
           <option value="61.4978,23.761">Tampere</option>
@@ -41,35 +41,35 @@
           <option value="69.9075,27.0283">Utsjoki</option>
           <option value="69.0127,20.8742">Kilpisjärvi</option>
         </select>
-        <button type="button" id="btnGeo" class="rounded-2xl border border-cyan-600/50 bg-cyan-950/40 px-4 py-3 font-bold text-cyan-200 hover:bg-cyan-900/40 transition-colors">
+        <button type="button" id="btnGeo" class="rounded-2xl border border-cyan-400/50 bg-cyan-50 px-4 py-3 font-bold text-cyan-800 hover:bg-cyan-100/90 transition-colors">
           Käytä sijaintiani (GPS)
         </button>
       </div>
       <p id="geoHint" class="text-xs text-slate-500 mt-2 hidden"></p>
     </section>
 
-    <section class="rounded-3xl border border-slate-700/80 bg-slate-900/80 backdrop-blur p-5 mb-5">
+    <section class="rounded-3xl border border-slate-200/90 bg-white/90 backdrop-blur p-5 mb-5 shadow-sm">
       <label for="targetTime" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Laske ajalle</label>
       <input
         id="targetTime"
         type="datetime-local"
-        class="w-full rounded-2xl bg-slate-800 border border-slate-600 px-4 py-3 font-semibold text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+        class="w-full rounded-2xl bg-white border border-slate-300 px-4 py-3 font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
       />
       <p class="text-xs text-slate-500 mt-2">
         Arvio käyttää valittua hetkeä lähtökohtana ja tarkastelee seuraavien 48 tunnin pimeitä tunteja.
       </p>
     </section>
 
-    <div id="status" class="text-center text-slate-400 text-sm font-medium mb-4 min-h-[1.25rem]">Ladataan…</div>
+    <div id="status" class="text-center text-slate-500 text-sm font-medium mb-4 min-h-[1.25rem]">Ladataan…</div>
 
     <section id="results" class="hidden space-y-4">
-      <div class="rounded-3xl border border-violet-500/30 bg-gradient-to-br from-violet-950/50 to-slate-900/90 p-6 text-center">
-        <p class="text-slate-400 text-sm font-semibold mb-1">Näkemisen todennäköisyys (arvio)</p>
-        <div id="combinedPct" class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-violet-300">—</div>
-        <p id="combinedLabel" class="text-slate-400 text-xs mt-2"></p>
+      <div class="rounded-3xl border border-violet-200/80 bg-gradient-to-br from-violet-50/90 via-white to-cyan-50/80 p-6 text-center shadow-sm">
+        <p class="text-slate-600 text-sm font-semibold mb-1">Näkemisen todennäköisyys (arvio)</p>
+        <div id="combinedPct" class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-violet-600">—</div>
+        <p id="combinedLabel" class="text-slate-500 text-xs mt-2"></p>
       </div>
 
-      <section id="chartSection" class="rounded-2xl border border-slate-700/80 bg-slate-900/70 p-4">
+      <section id="chartSection" class="rounded-2xl border border-slate-200/90 bg-white/90 p-4 shadow-sm">
         <div class="flex items-start justify-between gap-2 mb-1">
           <div>
             <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Seuraavat 8 tuntia</h2>
@@ -84,61 +84,61 @@
       </section>
 
       <div class="grid grid-cols-2 gap-3">
-        <div class="rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
+        <div class="rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm">
           <p class="text-xs font-bold text-slate-500 uppercase">Avaruussää</p>
-          <p id="kpVal" class="text-2xl font-black text-white mt-1">—</p>
-          <p id="activityLabel" class="text-xs text-slate-400 mt-1 leading-snug"></p>
+          <p id="kpVal" class="text-2xl font-black text-slate-900 mt-1">—</p>
+          <p id="activityLabel" class="text-xs text-slate-500 mt-1 leading-snug"></p>
         </div>
-        <div class="rounded-2xl border border-slate-700 bg-slate-900/70 p-4">
+        <div class="rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm">
           <p class="text-xs font-bold text-slate-500 uppercase">Taivas yöllä</p>
-          <p id="clarityVal" class="text-2xl font-black text-white mt-1">—</p>
-          <p id="clarityDetail" class="text-xs text-slate-400 mt-1 leading-snug"></p>
+          <p id="clarityVal" class="text-2xl font-black text-slate-900 mt-1">—</p>
+          <p id="clarityDetail" class="text-xs text-slate-500 mt-1 leading-snug"></p>
         </div>
       </div>
 
-      <div class="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-400 leading-relaxed">
-        <p class="font-bold text-slate-300 mb-2">Miten tämä lasketaan?</p>
+      <div class="rounded-2xl border border-slate-200 bg-slate-50/90 p-4 text-sm text-slate-600 leading-relaxed">
+        <p class="font-bold text-slate-800 mb-2">Miten tämä lasketaan?</p>
         <ul class="list-disc pl-4 space-y-1">
-          <li><span class="text-slate-300">Kp / K-indeksi</span> kuvaa geomagneettista aktiivisuutta; korkeampi Kp tarkoittaa usein voimakkaampaa revontuliaktiivisuutta leveämmillä leveysasteilla.</li>
-          <li><span class="text-slate-300">Taivas yöllä</span> = kuinka selkeä taivas on seuraavien vuorokausien <em>pimeinä</em> tunteina (pilvisyysennuste). Revontulet näkyvät vain, jos taivas on riittävän tumma ja pilvet eivät peitä näkyvyyttä.</li>
+          <li><span class="text-slate-800">Kp / K-indeksi</span> kuvaa geomagneettista aktiivisuutta; korkeampi Kp tarkoittaa usein voimakkaampaa revontuliaktiivisuutta leveämmillä leveysasteilla.</li>
+          <li><span class="text-slate-800">Taivas yöllä</span> = kuinka selkeä taivas on seuraavien vuorokausien <em>pimeinä</em> tunteina (pilvisyysennuste). Revontulet näkyvät vain, jos taivas on riittävän tumma ja pilvet eivät peitä näkyvyyttä.</li>
           <li>Kokonaisarvi yhdistää nämä kertolaskulla: aktiivisuus × näkyvyys (molemmat 0–100 %).</li>
         </ul>
       </div>
 
-      <div class="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 text-xs text-slate-500 leading-relaxed">
-        <p class="font-bold text-slate-400 mb-2 uppercase tracking-wide">Lähteet ja lisätieto</p>
+      <div class="rounded-2xl border border-slate-200 bg-slate-50/90 p-4 text-xs text-slate-600 leading-relaxed">
+        <p class="font-bold text-slate-700 mb-2 uppercase tracking-wide">Lähteet ja lisätieto</p>
         <ul class="space-y-2">
           <li>
-            <a class="text-cyan-400 hover:underline" href="https://www.swpc.noaa.gov/content/data-access" rel="noopener noreferrer" target="_blank">NOAA SWPC — Data Access</a>
+            <a class="text-cyan-700 hover:underline" href="https://www.swpc.noaa.gov/content/data-access" rel="noopener noreferrer" target="_blank">NOAA SWPC — Data Access</a>
             (planeettojen K-indeksi, JSON)
           </li>
           <li>
-            <a class="text-cyan-400 hover:underline" href="https://services.swpc.noaa.gov/json/planetary_k_index_1m.json" rel="noopener noreferrer" target="_blank">planetary_k_index_1m.json</a>
+            <a class="text-cyan-700 hover:underline" href="https://services.swpc.noaa.gov/json/planetary_k_index_1m.json" rel="noopener noreferrer" target="_blank">planetary_k_index_1m.json</a>
             — käytetty raaka-aine
           </li>
           <li>
-            <a class="text-cyan-400 hover:underline" href="https://www.swpc.noaa.gov/products/aurora-30-minute-forecast" rel="noopener noreferrer" target="_blank">OVATION — Aurora 30 min -ennuste</a>
+            <a class="text-cyan-700 hover:underline" href="https://www.swpc.noaa.gov/products/aurora-30-minute-forecast" rel="noopener noreferrer" target="_blank">OVATION — Aurora 30 min -ennuste</a>
             (NOAA:n revontulimalli; vertailuun)
           </li>
           <li>
-            <a class="text-cyan-400 hover:underline" href="https://open-meteo.com/" rel="noopener noreferrer" target="_blank">Open-Meteo</a>
-            — tuntiennuste: pilvisyys ja yö/päivä (<code class="text-slate-400">is_day</code>), aikavyöhyke Europe/Helsinki
+            <a class="text-cyan-700 hover:underline" href="https://open-meteo.com/" rel="noopener noreferrer" target="_blank">Open-Meteo</a>
+            — tuntiennuste: pilvisyys ja yö/päivä (<code class="text-slate-600">is_day</code>), aikavyöhyke Europe/Helsinki
           </li>
           <li>
-            <a class="text-cyan-400 hover:underline" href="https://en.ilmatieteenlaitos.fi/auroras-and-space-weather" rel="noopener noreferrer" target="_blank">Ilmatieteen laitos — Revontulet ja avaruussää</a>
+            <a class="text-cyan-700 hover:underline" href="https://en.ilmatieteenlaitos.fi/auroras-and-space-weather" rel="noopener noreferrer" target="_blank">Ilmatieteen laitos — Revontulet ja avaruussää</a>
           </li>
           <li class="text-slate-500">
-            Ilmatieteen laitoksen aiempi <span class="text-slate-400">Auroras Now!</span> -reaaliaikakamerapalvelu on lakkautettu eikä ole enää saatavilla.
+            Ilmatieteen laitoksen aiempi <span class="text-slate-600">Auroras Now!</span> -reaaliaikakamerapalvelu on lakkautettu eikä ole enää saatavilla.
           </li>
         </ul>
       </div>
 
-      <button type="button" id="btnRefresh" class="w-full rounded-2xl bg-slate-800 border border-slate-600 py-3 font-bold text-white hover:bg-slate-700 transition-colors">
+      <button type="button" id="btnRefresh" class="w-full rounded-2xl bg-white border border-slate-300 py-3 font-bold text-slate-800 shadow-sm hover:bg-slate-50 transition-colors">
         Päivitä tiedot
       </button>
     </section>
 
-    <p id="errorBox" class="hidden text-center text-rose-400 text-sm font-medium mt-4"></p>
+    <p id="errorBox" class="hidden text-center text-rose-600 text-sm font-medium mt-4"></p>
   </div>
 
   <script>
@@ -317,21 +317,21 @@
         const y = padT + chartH - h;
         const title = barTitle(p);
         if (pct != null) {
-          const g1 = Math.round(34 + (pct / 100) * (167 - 34));
-          const g2 = Math.round(211 + (pct / 100) * (139 - 211));
-          const g3 = Math.round(238 + (pct / 100) * (172 - 238));
+          const g1 = Math.round(6 + (pct / 100) * (124 - 6));
+          const g2 = Math.round(182 + (pct / 100) * (58 - 182));
+          const g3 = Math.round(212 + (pct / 100) * (237 - 212));
           parts.push(
-            `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(h, 2)}" rx="4" fill="rgb(${g1},${g2},${g3})" stroke="rgba(148,163,184,0.35)" stroke-width="1">` +
+            `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(h, 2)}" rx="4" fill="rgb(${g1},${g2},${g3})" stroke="rgba(100,116,139,0.35)" stroke-width="1">` +
               `<title>${title}</title></rect>`
           );
         } else {
           parts.push(
-            `<rect x="${x}" y="${padT + chartH - 3}" width="${barW}" height="3" rx="2" fill="#334155" opacity="0.6">` +
+            `<rect x="${x}" y="${padT + chartH - 3}" width="${barW}" height="3" rx="2" fill="#cbd5e1" opacity="0.85">` +
               `<title>${title}</title></rect>`
           );
         }
         parts.push(
-          `<text x="${x + barW / 2}" y="${H - 10}" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Nunito, sans-serif">${p.label}</text>`
+          `<text x="${x + barW / 2}" y="${H - 10}" text-anchor="middle" fill="#64748b" font-size="9" font-family="Nunito, sans-serif">${p.label}</text>`
         );
       }
       parts.push('</svg>');
